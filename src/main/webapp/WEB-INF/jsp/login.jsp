@@ -15,9 +15,7 @@
         <div class="bg-white rounded-r-xl p-10 flex flex-col gap-5 justify-center h-full w-1/2">
             <h2 class="text-2xl font-bold">Acesso ao Lumina</h2>
             <p class="text-gray-600">
-                Lorem ipsum dolor sit amet consectetur, adipisicing elit. Laboriosam beatae molestiae a vitae odit,
-                porro eum culpa minima dolorem sequi dolore, repellendus assumenda perspiciatis officia accusantium obcaecati
-                sed deleniti odio.
+                Descubra novas histórias, encontre livros que combinam com você e transforme cada leitura em uma nova experiência.
             </p>
 
             <form class="flex flex-col gap-5" method="post" action="${pageContext.request.contextPath}/login">
