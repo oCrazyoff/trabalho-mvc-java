@@ -3,16 +3,13 @@ services:
   mysql:
     image: mysql:8.4
     container_name: mvc-java-mysql
-
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: mvc_java
       MYSQL_USER: mvc_user
       MYSQL_PASSWORD: mvc123
-
     ports:
       - "3306:3306"
-
     volumes:
       - mysql_data:/var/lib/mysql
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
@@ -20,13 +17,21 @@ services:
   tomcat:
     image: tomcat:10.1-jdk21
     container_name: mvc-java-tomcat
-
     ports:
       - "8080:8080"
-
     volumes:
       - ./deploy:/usr/local/tomcat/webapps
+    depends_on:
+      - mysql
 
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: mvc-java-phpmyadmin
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
     depends_on:
       - mysql
 
