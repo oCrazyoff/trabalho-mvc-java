@@ -28,7 +28,23 @@ public class LoginServlet extends BaseServlet {
 
         HttpSession session = req.getSession(false);
         if (session != null && session.getAttribute("usuarioLogado") != null) {
-            this.redirect(req, resp, "/home");
+
+            // 1. Recupera o usuário que está guardado na sessão (com cast):
+            Usuario usuario = (Usuario) session.getAttribute("usuarioLogado");
+            // 2. Agora sim verifica o perfil:
+            boolean isAdmin = (usuario.getPerfilId() != null && usuario.getPerfilId() == 1);
+            if (isAdmin) {
+                this.redirect(req, resp, "/dashboard");
+            } else {
+                this.redirect(req, resp, "/inicio");
+            }
+
+            if (isAdmin) {
+                this.redirect(req, resp, "/dashboard");
+            } else {
+                this.redirect(req, resp, "/inicio");
+            }
+
             return;
         }
 
@@ -47,7 +63,16 @@ public class LoginServlet extends BaseServlet {
                     this.param(req, "senha"));
 
             req.getSession(true).setAttribute("usuarioLogado", usuario);
-            this.redirect(req, resp, "/home");
+
+            // verificando se é admin ou não
+            boolean isAdmin = (usuario.getPerfilId() != null && usuario.getPerfilId() == 1);
+
+            if (isAdmin) {
+                this.redirect(req, resp, "/dashboard");
+            } else {
+                this.redirect(req, resp, "/inicio");
+            }
+
         } catch (IllegalArgumentException e) {
             req.setAttribute("erro", e.getMessage());
             this.forward(req, resp, VIEW);
