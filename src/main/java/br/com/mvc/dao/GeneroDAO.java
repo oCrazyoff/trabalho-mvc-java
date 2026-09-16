@@ -32,7 +32,7 @@ public class GeneroDAO extends MysqlDAO {
             }
 
         } catch (SQLException e) {
-            throw new RuntimeException("Erro ao buscar categorias do usuário.", e);
+            throw new RuntimeException("Erro ao buscar gêneros do usuário.", e);
         }
 
         return generos;

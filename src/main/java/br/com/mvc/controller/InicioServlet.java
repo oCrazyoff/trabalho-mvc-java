@@ -27,11 +27,11 @@ public class InicioServlet extends BaseServlet {
         HttpSession session = req.getSession(false);
         Usuario usuarioLogado = (session != null) ? (Usuario) session.getAttribute("usuarioLogado") : null;
 
-        // 2. Se o usuário estiver logado, busca as categorias dele
+        // 2. Se o usuário estiver logado, busca os gêneros dele
         if (usuarioLogado != null) {
 
-            List<Genero> categorias = this.generoService.listarPorUsuario(usuarioLogado.getId());
-            req.setAttribute("categorias", categorias);
+            List<Genero> generos = this.generoService.listarPorUsuario(usuarioLogado.getId());
+            req.setAttribute("generos", generos);
 
             List<Livro> recomendados = this.livroService.listarRecomendados(usuarioLogado.getId());
             req.setAttribute("livrosRecomendados", recomendados);
