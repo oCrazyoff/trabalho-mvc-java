@@ -1,6 +1,6 @@
 <%--
-  Redireciona a raiz da aplicacao para o login.
+Redireciona a raiz da aplicacao para a welcome.
 --%>
 <%
-    response.sendRedirect(request.getContextPath() + "/login");
+  response.sendRedirect(request.getContextPath() + "/welcome");
 %>

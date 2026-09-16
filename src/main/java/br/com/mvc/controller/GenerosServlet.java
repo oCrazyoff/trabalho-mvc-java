@@ -2,7 +2,7 @@ package br.com.mvc.controller;
 
 import java.io.IOException;
 import java.util.List;
-
+import java.util.Set;
 import br.com.mvc.model.Genero;
 import br.com.mvc.model.Usuario;
 import br.com.mvc.service.GeneroService;
@@ -18,6 +18,7 @@ public class GenerosServlet extends BaseServlet {
 
     private final GeneroService generoService = new GeneroService();
 
+    // GET
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 
@@ -25,17 +26,34 @@ public class GenerosServlet extends BaseServlet {
         HttpSession session = req.getSession(false);
         Usuario usuarioLogado = (session != null) ? (Usuario) session.getAttribute("usuarioLogado") : null;
 
-        // 2. Se o usuário estiver logado, busca todos os generos
-        if (usuarioLogado != null) {
+        // 2. Busca todos os generos
+        List<Genero> generos = this.generoService.listarGeneros();
+        Set<Long> generosSalvosIds = this.generoService.listarIdsPorUsuario(usuarioLogado.getId());
 
-            List<Genero> generos = this.generoService.listarGeneros();
-            req.setAttribute("generos", generos);
-
-        }
+        req.setAttribute("generos", generos);
+        req.setAttribute("generosSalvosIds", generosSalvosIds);
 
         // 3. Encaminha para o JSP desenhar na tela
         this.forward(req, resp, "/WEB-INF/jsp/comum/generos.jsp");
 
+    }
+
+    // POST
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        HttpSession session = req.getSession(false);
+        Usuario usuarioLogado = (session != null) ? (Usuario) session.getAttribute("usuarioLogado") : null;
+
+        Long generoId = this.paramLong(req, "generoId");
+
+        if (generoId != null) {
+
+            this.generoService.alternarGeneroUsuario(usuarioLogado.getId(), generoId);
+
+        }
+
+        // redireciona de volta para recarregar a lista
+        this.redirect(req, resp, "/generos");
     }
 
 }

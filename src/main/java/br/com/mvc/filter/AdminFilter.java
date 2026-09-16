@@ -15,14 +15,9 @@ import java.io.IOException;
 
 @WebFilter(urlPatterns = {
         "/admin/*",
-        "/inicio",
-        "/usuarios",
-        "/perfis",
-        "/generos",
-        "/livros"
 })
 
-public class AuthFilter implements Filter {
+public class AdminFilter implements Filter {
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
@@ -32,13 +27,15 @@ public class AuthFilter implements Filter {
         HttpServletResponse resp = (HttpServletResponse) response;
         HttpSession session = req.getSession(false);
 
-        Usuario usuarioLogado = null;
-        if (session != null) {
-            usuarioLogado = (Usuario) session.getAttribute("usuarioLogado");
+        if (session == null || session.getAttribute("usuarioLogado") == null) {
+            resp.sendRedirect(req.getContextPath() + "/login");
+            return;
         }
 
-        if (usuarioLogado == null) {
-            resp.sendRedirect(req.getContextPath() + "/login");
+        Usuario usuarioLogado = (Usuario) session.getAttribute("usuarioLogado");
+
+        if (usuarioLogado.getPerfilId() == null || usuarioLogado.getPerfilId() != 1L) {
+            resp.sendRedirect(req.getContextPath() + "/inicio");
             return;
         }
 

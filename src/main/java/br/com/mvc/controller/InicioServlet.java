@@ -27,16 +27,12 @@ public class InicioServlet extends BaseServlet {
         HttpSession session = req.getSession(false);
         Usuario usuarioLogado = (session != null) ? (Usuario) session.getAttribute("usuarioLogado") : null;
 
-        // 2. Se o usuário estiver logado, busca os gêneros dele
-        if (usuarioLogado != null) {
+        // 2. Busca os gêneros do usuario
+        List<Genero> generos = this.generoService.listarPorUsuario(usuarioLogado.getId());
+        req.setAttribute("generos", generos);
 
-            List<Genero> generos = this.generoService.listarPorUsuario(usuarioLogado.getId());
-            req.setAttribute("generos", generos);
-
-            List<Livro> recomendados = this.livroService.listarRecomendados(usuarioLogado.getId());
-            req.setAttribute("livrosRecomendados", recomendados);
-
-        }
+        List<Livro> recomendados = this.livroService.listarRecomendados(usuarioLogado.getId());
+        req.setAttribute("livrosRecomendados", recomendados);
 
         // 3. Encaminha para o JSP desenhar na tela
         this.forward(req, resp, "/WEB-INF/jsp/comum/inicio.jsp");

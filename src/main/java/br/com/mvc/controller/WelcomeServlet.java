@@ -6,12 +6,12 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-@WebServlet("/admin/dashboard")
+@WebServlet("/welcome")
+public class WelcomeServlet extends BaseServlet {
 
-public class DashboardServlet extends BaseServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        this.forward(req, resp, "/WEB-INF/jsp/admin/dashboard.jsp");
+        // Encaminha a requisição para a página de landing page (welcome.jsp)
+        this.forward(req, resp, "/WEB-INF/jsp/welcome.jsp");
     }
-
 }

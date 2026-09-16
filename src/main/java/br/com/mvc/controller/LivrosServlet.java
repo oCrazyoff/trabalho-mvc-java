@@ -25,13 +25,9 @@ public class LivrosServlet extends BaseServlet {
         HttpSession session = req.getSession(false);
         Usuario usuarioLogado = (session != null) ? (Usuario) session.getAttribute("usuarioLogado") : null;
 
-        // 2. Se o usuário estiver logado, busca todos os livros
-        if (usuarioLogado != null) {
-
-            List<Livro> livros = this.livroService.listaLivros();
-            req.setAttribute("livros", livros);
-
-        }
+        // 2. Busca todos os livros do usuario
+        List<Livro> livros = this.livroService.listaLivros();
+        req.setAttribute("livros", livros);
 
         // 3. Encaminha para o JSP desenhar na tela
         this.forward(req, resp, "/WEB-INF/jsp/comum/livros.jsp");

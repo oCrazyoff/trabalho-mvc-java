@@ -7,7 +7,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="icon" href="${pageContext.request.contextPath}/images/favicon.png" type="image/x-icon">
+        <link rel="icon" href="${pageContext.request.contextPath}/images/logo.png" type="image/x-icon">
         <title>${not empty titulo ? titulo : 'Lumina'}</title>
         <!-- CSS do Tailwind compilado -->
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/output.css">
@@ -17,7 +17,7 @@
         <!-- Topbar / Navbar -->
         <c:if test="${not empty usuarioLogado}">
             
-            <header class="bg-principal text-white shadow-md">
+            <header class="sticky top-0 left-0 z-10 bg-principal text-white shadow-md">
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
                     <div class="flex flex-wrap items-center justify-between gap-4 py-4">
@@ -46,28 +46,24 @@
 
 
                         <%-- Navegação --%>
-                        <nav aria-label="Navegação principal"
-                            class="flex items-center gap-1 sm:gap-2
-                                    order-3 w-full sm:order-2 sm:w-auto">
+                        <nav class="flex items-center gap-2">
+                            <c:choose>
 
-                            <a href="${pageContext.request.contextPath}/inicio"
-                            class="px-3 py-2 rounded-lg text-sm font-medium
-                                    hover:bg-white/15 transition-colors">
-                                Início
-                            </a>
+                                <%-- Menu do Administrador (perfilId == 1) --%>
+                                <c:when test="${usuarioLogado.perfilId == 1}">
+                                    <a href="${pageContext.request.contextPath}/admin/dashboard" class="px-3 py-2 rounded-lg text-sm font-medium hover:bg-white/15">Dashboard</a>
+                                    <a href="${pageContext.request.contextPath}/admin/livros" class="px-3 py-2 rounded-lg text-sm font-medium hover:bg-white/15">Gerenciar Livros</a>
+                                    <a href="${pageContext.request.contextPath}/admin/generos" class="px-3 py-2 rounded-lg text-sm font-medium hover:bg-white/15">Gerenciar Gêneros</a>
+                                    <a href="${pageContext.request.contextPath}/admin/usuarios" class="px-3 py-2 rounded-lg text-sm font-medium hover:bg-white/15">Usuários</a>
+                                </c:when>
 
-                            <a href="${pageContext.request.contextPath}/livros"
-                            class="px-3 py-2 rounded-lg text-sm font-medium
-                                    hover:bg-white/15 transition-colors">
-                                Livros
-                            </a>
-
-                            <a href="${pageContext.request.contextPath}/generos"
-                            class="px-3 py-2 rounded-lg text-sm font-medium
-                                    hover:bg-white/15 transition-colors">
-                                Gêneros
-                            </a>
-
+                                <%-- Menu do Leitor Comum (perfilId == 2) --%>
+                                <c:otherwise>
+                                    <a href="${pageContext.request.contextPath}/inicio" class="px-3 py-2 rounded-lg text-sm font-medium hover:bg-white/15">Início</a>
+                                    <a href="${pageContext.request.contextPath}/livros" class="px-3 py-2 rounded-lg text-sm font-medium hover:bg-white/15">Livros</a>
+                                    <a href="${pageContext.request.contextPath}/generos" class="px-3 py-2 rounded-lg text-sm font-medium hover:bg-white/15">Gêneros</a>
+                                </c:otherwise>
+                            </c:choose>
                         </nav>
 
 

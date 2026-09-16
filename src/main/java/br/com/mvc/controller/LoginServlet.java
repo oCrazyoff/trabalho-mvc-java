@@ -35,7 +35,7 @@ public class LoginServlet extends BaseServlet {
             boolean isAdmin = (usuario.getPerfilId() != null && usuario.getPerfilId() == 1);
 
             if (isAdmin) {
-                this.redirect(req, resp, "/dashboard");
+                this.redirect(req, resp, "/admin/dashboard");
             } else {
                 this.redirect(req, resp, "/inicio");
             }
@@ -63,7 +63,7 @@ public class LoginServlet extends BaseServlet {
             boolean isAdmin = (usuario.getPerfilId() != null && usuario.getPerfilId() == 1);
 
             if (isAdmin) {
-                this.redirect(req, resp, "/dashboard");
+                this.redirect(req, resp, "/admin/dashboard");
             } else {
                 this.redirect(req, resp, "/inicio");
             }
