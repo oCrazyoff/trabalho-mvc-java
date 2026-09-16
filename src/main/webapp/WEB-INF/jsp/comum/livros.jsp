@@ -2,33 +2,14 @@
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="t" tagdir="/WEB-INF/tags" %>
 
-<t:layout titulo="Início - Lumina">
+<t:layout titulo="Catálogo de Livros - Lumina">
     <div class="max-w-6xl mx-auto py-8 px-4">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6">Todos os Livros</h1>
 
-        <%-- categorias de interesse --%>
-        <h2 class="text-2xl font-bold text-gray-800 mb-4">Suas Categorias de Interesse</h2>
         <c:choose>
-            <c:when test="${not empty categorias}">
-                <div class="grid grid-cols-4 gap-2">
-                    <c:forEach items="${categorias}" var="categoria">
-                        <div class="bg-principal/50 text-principal p-5 rounded-lg shadow-sm">
-                            <p class="text-xl font-semibold mb-3">${categoria.nome}</p>
-                            <span>${categoria.descricao}</span>
-                        </div>
-                    </c:forEach>
-                </div>
-            </c:when>
-            <c:otherwise>
-                <p class="text-gray-500">Você ainda não selecionou nenhuma categoria favorita.</p>
-            </c:otherwise>
-        </c:choose>
-
-        <%-- livros recomendados --%>
-        <h2 class="text-2xl font-bold text-gray-800 mb-4 mt-10">Livros Recomendados</h2>
-        <c:choose>
-            <c:when test="${not empty livrosRecomendados}">
-                <div class="grid grid-cols-4 gap-5">
-                    <c:forEach items="${livrosRecomendados}" var="livro">
+            <c:when test="${not empty livros}">
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                    <c:forEach items="${livros}" var="livro">
                         <div class="bg-white rounded-lg shadow border border-gray-100 overflow-hidden flex flex-col hover:shadow-lg transition">
                             <div class="h-56 bg-gray-100 flex items-center justify-center overflow-hidden">
                                 <c:choose>
@@ -56,9 +37,8 @@
                     </c:forEach>
                 </div>
             </c:when>
-
             <c:otherwise>
-                <p class="text-gray-500">Sem livros para recomendar no momento!</p>
+                <p class="text-gray-500">Nenhum livro cadastrado no sistema.</p>
             </c:otherwise>
         </c:choose>
     </div>

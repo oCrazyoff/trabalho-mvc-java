@@ -33,11 +33,6 @@ public class LoginServlet extends BaseServlet {
             Usuario usuario = (Usuario) session.getAttribute("usuarioLogado");
             // 2. Agora sim verifica o perfil:
             boolean isAdmin = (usuario.getPerfilId() != null && usuario.getPerfilId() == 1);
-            if (isAdmin) {
-                this.redirect(req, resp, "/dashboard");
-            } else {
-                this.redirect(req, resp, "/inicio");
-            }
 
             if (isAdmin) {
                 this.redirect(req, resp, "/dashboard");

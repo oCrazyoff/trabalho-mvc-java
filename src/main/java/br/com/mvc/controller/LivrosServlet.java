@@ -1,23 +1,21 @@
 package br.com.mvc.controller;
 
-import br.com.mvc.model.Genero;
-import br.com.mvc.model.Usuario;
+import java.io.IOException;
+import java.util.List;
+
 import br.com.mvc.model.Livro;
+import br.com.mvc.model.Usuario;
 import br.com.mvc.service.LivroService;
-import br.com.mvc.service.GeneroService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-import java.io.IOException;
-import java.util.List;
 
-@WebServlet("/inicio")
+@WebServlet("/livros")
 
-public class InicioServlet extends BaseServlet {
+public class LivrosServlet extends BaseServlet {
 
-    private final GeneroService generoService = new GeneroService();
     private final LivroService livroService = new LivroService();
 
     @Override
@@ -27,19 +25,17 @@ public class InicioServlet extends BaseServlet {
         HttpSession session = req.getSession(false);
         Usuario usuarioLogado = (session != null) ? (Usuario) session.getAttribute("usuarioLogado") : null;
 
-        // 2. Se o usuário estiver logado, busca as categorias dele
+        // 2. Se o usuário estiver logado, busca todos os livros
         if (usuarioLogado != null) {
 
-            List<Genero> categorias = this.generoService.listarPorUsuario(usuarioLogado.getId());
-            req.setAttribute("categorias", categorias);
-
-            List<Livro> recomendados = this.livroService.listarRecomendados(usuarioLogado.getId());
-            req.setAttribute("livrosRecomendados", recomendados);
+            List<Livro> livros = this.livroService.listaLivros();
+            req.setAttribute("livros", livros);
 
         }
 
         // 3. Encaminha para o JSP desenhar na tela
-        this.forward(req, resp, "/WEB-INF/jsp/comum/inicio.jsp");
+        this.forward(req, resp, "/WEB-INF/jsp/comum/livros.jsp");
+
     }
 
 }
