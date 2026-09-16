@@ -8,6 +8,7 @@ import java.util.List;
 
 public class GeneroDAO extends MysqlDAO {
 
+    // listar os generos do usuario
     public List<Genero> listarPorUsuario(Long usuarioId) {
 
         String sql = "SELECT g.id, g.nome, g.descricao "
@@ -33,6 +34,34 @@ public class GeneroDAO extends MysqlDAO {
 
         } catch (SQLException e) {
             throw new RuntimeException("Erro ao buscar gêneros do usuário.", e);
+        }
+
+        return generos;
+
+    }
+
+    // listar todos os generos
+    public List<Genero> listarGeneros() {
+
+        String sql = "SELECT id, nome, descricao FROM generos";
+
+        List<Genero> generos = new ArrayList<>();
+
+        try (ResultSet rs = super.executar(sql)) {
+
+            while (rs.next()) {
+
+                Genero g = new Genero();
+                g.setId(rs.getLong("id"));
+                g.setNome(rs.getString("nome"));
+                g.setDescricao(rs.getString("descricao"));
+
+                generos.add(g);
+
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao buscar gêneros.", e);
         }
 
         return generos;

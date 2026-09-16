@@ -20,4 +20,10 @@ public class GeneroService {
 
     }
 
+    public List<Genero> listarGeneros() {
+
+        return this.generoDAO.listarGeneros();
+
+    }
+
 }
