@@ -291,11 +291,8 @@
                     <p class="text-sm text-gray-500">
                         Ainda não possui uma conta?
 
-                        <a
-                            href="#"
-                            class="font-semibold text-principal
-                                   hover:underline underline-offset-4
-                                   transition-colors">
+                        <a href="${pageContext.request.contextPath}/cadastro"
+                        class="font-semibold text-principal hover:underline underline-offset-4 transition-colors">
                             Crie sua conta
                         </a>
                     </p>
