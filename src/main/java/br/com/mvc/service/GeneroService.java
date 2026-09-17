@@ -66,4 +66,35 @@ public class GeneroService {
         }
     }
 
+    // buscar por id
+    public Genero buscarPorId(Long id) {
+        if (id == null)
+            return null;
+        return this.generoDAO.buscarPorId(id);
+    }
+
+    // cadastrar um genero
+    public void salvar(Genero genero) {
+        if (genero == null) {
+            throw new IllegalArgumentException("Gênero é obrigatório.");
+        }
+        if (genero.getNome() == null || genero.getNome().isBlank()) {
+            throw new IllegalArgumentException("O nome do gênero é obrigatório.");
+        }
+
+        if (genero.getId() == null) {
+            this.generoDAO.inserir(genero);
+        } else {
+            this.generoDAO.alterar(genero);
+        }
+    }
+
+    // deletar um genero
+    public void deletar(Long id) {
+        if (id == null) {
+            throw new IllegalArgumentException("ID inválido para exclusão.");
+        }
+        this.generoDAO.deletar(id);
+    }
+
 }

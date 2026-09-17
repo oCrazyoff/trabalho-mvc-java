@@ -199,4 +199,51 @@ public class GeneroDAO extends MysqlDAO {
 
     }
 
+    // Buscar gênero por ID
+    public Genero buscarPorId(Long id) {
+        String sql = "SELECT id, nome, descricao FROM generos WHERE id = ?";
+        try (ResultSet rs = super.executar(sql, id)) {
+            if (rs.next()) {
+                Genero g = new Genero();
+                g.setId(rs.getLong("id"));
+                g.setNome(rs.getString("nome"));
+                g.setDescricao(rs.getString("descricao"));
+                return g;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao buscar gênero por ID.", e);
+        }
+        return null;
+    }
+
+    // Inserir novo gênero
+    public void inserir(Genero genero) {
+        String sql = "INSERT INTO generos (nome, descricao) VALUES (?, ?)";
+        try {
+            super.executarUpdate(sql, genero.getNome(), genero.getDescricao());
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao inserir gênero.", e);
+        }
+    }
+
+    // Alterar gênero existente
+    public void alterar(Genero genero) {
+        String sql = "UPDATE generos SET nome = ?, descricao = ? WHERE id = ?";
+        try {
+            super.executarUpdate(sql, genero.getNome(), genero.getDescricao(), genero.getId());
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao alterar gênero.", e);
+        }
+    }
+
+    // Deletar gênero
+    public void deletar(Long id) {
+        String sql = "DELETE FROM generos WHERE id = ?";
+        try {
+            super.executarUpdate(sql, id);
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao deletar gênero.", e);
+        }
+    }
+
 }

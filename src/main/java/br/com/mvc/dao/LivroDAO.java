@@ -123,4 +123,76 @@ public class LivroDAO extends MysqlDAO {
 
     }
 
+    // buscar livro pelo ID
+    public Livro buscarPorId(Long id) {
+        String sql = "SELECT id, titulo, autor, sinopse, isbn, editora, ano_publicacao, numero_paginas, capa_url FROM livros WHERE id = ?";
+        try (ResultSet rs = super.executar(sql, id)) {
+            if (rs.next()) {
+                Livro livro = new Livro();
+                livro.setId(rs.getLong("id"));
+                livro.setTitulo(rs.getString("titulo"));
+                livro.setAutor(rs.getString("autor"));
+                livro.setSinopse(rs.getString("sinopse"));
+                livro.setIsbn(rs.getString("isbn"));
+                livro.setEditora(rs.getString("editora"));
+                livro.setAnoPublicacao(rs.getInt("ano_publicacao"));
+                livro.setNumPaginas(rs.getInt("numero_paginas"));
+                livro.setCapaUrl(rs.getString("capa_url"));
+                return livro;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao buscar livro por id.", e);
+        }
+        return null;
+    }
+
+    // cadastrar um novo livro
+    public void inserir(Livro livro) {
+        String sql = "INSERT INTO livros (titulo, autor, sinopse, isbn, editora, ano_publicacao, numero_paginas, capa_url) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        try {
+            super.executarUpdate(sql,
+                    livro.getTitulo(),
+                    livro.getAutor(),
+                    livro.getSinopse(),
+                    livro.getIsbn(),
+                    livro.getEditora(),
+                    livro.getAnoPublicacao(),
+                    livro.getNumPaginas(),
+                    livro.getCapaUrl());
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao inserir livro.", e);
+        }
+    }
+
+    // editar um livro
+    public void alterar(Livro livro) {
+        String sql = "UPDATE livros SET titulo = ?, autor = ?, sinopse = ?, isbn = ?, editora = ?, "
+                + "ano_publicacao = ?, numero_paginas = ?, capa_url = ? WHERE id = ?";
+        try {
+            super.executarUpdate(sql,
+                    livro.getTitulo(),
+                    livro.getAutor(),
+                    livro.getSinopse(),
+                    livro.getIsbn(),
+                    livro.getEditora(),
+                    livro.getAnoPublicacao(),
+                    livro.getNumPaginas(),
+                    livro.getCapaUrl(),
+                    livro.getId());
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao alterar livro.", e);
+        }
+    }
+
+    // deletar um livro
+    public void deletar(Long id) {
+        String sql = "DELETE FROM livros WHERE id = ?";
+        try {
+            super.executarUpdate(sql, id);
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao deletar livro.", e);
+        }
+    }
+
 }
