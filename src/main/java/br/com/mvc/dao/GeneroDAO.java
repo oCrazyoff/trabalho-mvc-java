@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 public class GeneroDAO extends MysqlDAO {
 
@@ -131,6 +133,69 @@ public class GeneroDAO extends MysqlDAO {
         } catch (SQLException e) {
             throw new RuntimeException("Erro ao desvincular gênero do usuário.", e);
         }
+
+    }
+
+    // generos mais populares com base nos usuários
+    public Map<String, Integer> generosMaisPopulares() {
+
+        String sql = """
+                    SELECT g.nome, COUNT(ug.usuario_id) AS total
+                    FROM generos g
+                    INNER JOIN usuario_generos ug ON ug.genero_id = g.id
+                    GROUP BY g.id, g.nome
+                    ORDER BY total DESC
+                    LIMIT 5
+                """;
+
+        Map<String, Integer> dados = new LinkedHashMap<>();
+
+        try (ResultSet rs = super.executar(sql)) {
+
+            while (rs.next()) {
+
+                dados.put(rs.getString("nome"), rs.getInt("total"));
+
+            }
+
+        } catch (SQLException e) {
+
+            throw new RuntimeException("Erro ao buscar gêneros mais populares.", e);
+
+        }
+
+        return dados;
+
+    }
+
+    // quantidade de livros cadastrados em cada genero
+    public Map<String, Integer> livrosPorGenero() {
+
+        String sql = """
+                    SELECT g.nome, COUNT(lg.livro_id) AS total
+                    FROM generos g
+                    LEFT JOIN livro_generos lg ON lg.genero_id = g.id
+                    GROUP BY g.id, g.nome
+                    ORDER BY total DESC
+                """;
+
+        Map<String, Integer> dados = new LinkedHashMap<>();
+
+        try (ResultSet rs = super.executar(sql)) {
+
+            while (rs.next()) {
+
+                dados.put(rs.getString("nome"), rs.getInt("total"));
+
+            }
+
+        } catch (SQLException e) {
+
+            throw new RuntimeException("Erro ao buscar quantidade de livros por gênero.", e);
+
+        }
+
+        return dados;
 
     }
 

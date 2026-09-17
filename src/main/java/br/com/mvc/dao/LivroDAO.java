@@ -12,8 +12,7 @@ public class LivroDAO extends MysqlDAO {
 
     public List<Livro> listarRecomendados(Long usuarioId) {
 
-        // DISTINCT evita que o mesmo livro se repita caso ele tenha mais de uma
-        // categoria em comum
+        // lista os livros recomendados pelo usuario ID
         String sql = "SELECT DISTINCT l.id, l.titulo, l.autor, l.sinopse, l.isbn, l.editora, l.ano_publicacao, l.numero_paginas, l.capa_url "
                 + "FROM livros l "
                 + "INNER JOIN livro_generos lg ON lg.livro_id = l.id "
@@ -49,6 +48,7 @@ public class LivroDAO extends MysqlDAO {
 
     }
 
+    // listar todos os livros
     public List<Livro> listaLivros() {
 
         String sql = "SELECT id, titulo, autor, sinopse, isbn, editora, ano_publicacao, numero_paginas, capa_url FROM livros";
@@ -78,6 +78,48 @@ public class LivroDAO extends MysqlDAO {
         }
 
         return livros;
+
+    }
+
+    // lista o livro mais recomendado
+    public Livro livroMaisRecomendado() {
+
+        String sql = "SELECT l.id, l.titulo, l.autor, l.sinopse, l.isbn, l.editora, l.ano_publicacao, l.numero_paginas, l.capa_url, "
+                + "COUNT(DISTINCT ug.usuario_id) AS total_recomendacoes "
+                + "FROM livros l "
+                + "INNER JOIN livro_generos lg ON lg.livro_id = l.id "
+                + "INNER JOIN usuario_generos ug ON ug.genero_id = lg.genero_id "
+                + "GROUP BY l.id, l.titulo, l.autor, l.sinopse, l.isbn, l.editora, l.ano_publicacao, l.numero_paginas, l.capa_url "
+                + "ORDER BY total_recomendacoes DESC "
+                + "LIMIT 1";
+
+        try (ResultSet rs = super.executar(sql)) {
+
+            if (rs.next()) {
+
+                Livro livro = new Livro();
+
+                livro.setId(rs.getLong("id"));
+                livro.setTitulo(rs.getString("titulo"));
+                livro.setAutor(rs.getString("autor"));
+                livro.setSinopse(rs.getString("sinopse"));
+                livro.setIsbn(rs.getString("isbn"));
+                livro.setEditora(rs.getString("editora"));
+                livro.setAnoPublicacao(rs.getInt("ano_publicacao"));
+                livro.setNumPaginas(rs.getInt("numero_paginas"));
+                livro.setCapaUrl(rs.getString("capa_url"));
+
+                return livro;
+            }
+
+        } catch (SQLException e) {
+
+            throw new RuntimeException("Erro ao buscar o livro mais recomendado.", e);
+
+        }
+
+        // caso não tenha livros recomendados ainda
+        return null;
 
     }
 

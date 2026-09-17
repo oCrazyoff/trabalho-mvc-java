@@ -81,7 +81,7 @@
 
                                 </div>
 
-                                <div class="flex items-center gap-1">
+                                <div class="flex flex-col">
                                     <span class="text-xs text-white/70">
                                         Olá,
                                     </span>
