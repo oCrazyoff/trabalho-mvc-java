@@ -8,14 +8,14 @@ import java.sql.SQLException;
 
 public class MysqlSingleton {
 
-    private static final String URL =
-            "jdbc:mysql://mysql:3306/mvc_java?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC";
+    private static final String URL = "jdbc:mysql://mysql:3306/mvc_java?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC";
     private static final String USER = "mvc_user";
     private static final String PASSWORD = "mvc123";
 
     private static MysqlSingleton instance;
     private Connection conexao;
 
+    // 1. Construtor privado para carregar o driver JDBC do MySQL
     private MysqlSingleton() {
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
@@ -24,6 +24,7 @@ public class MysqlSingleton {
         }
     }
 
+    // 2. Método para obter a instância única do Singleton
     public static synchronized MysqlSingleton getInstance() {
         if (instance == null) {
             instance = new MysqlSingleton();
@@ -31,6 +32,7 @@ public class MysqlSingleton {
         return instance;
     }
 
+    // 3. Método para obter ou abrir a conexão com o banco MySQL
     private Connection obterConexao() throws SQLException {
         if (this.conexao == null || this.conexao.isClosed()) {
             this.conexao = DriverManager.getConnection(URL, USER, PASSWORD);
@@ -38,6 +40,7 @@ public class MysqlSingleton {
         return this.conexao;
     }
 
+    // 4. Método para executar consultas SELECT e retornar ResultSet
     public ResultSet executar(String sql, Object... parametros) throws SQLException {
         Connection conn = this.obterConexao();
         PreparedStatement ps = conn.prepareStatement(sql);
@@ -47,6 +50,7 @@ public class MysqlSingleton {
         return ps.executeQuery();
     }
 
+    // 5. Método para executar comandos de alteração (INSERT, UPDATE, DELETE)
     public int executarUpdate(String sql, Object... parametros) throws SQLException {
         Connection conn = this.obterConexao();
         try (PreparedStatement ps = conn.prepareStatement(sql)) {

@@ -17,6 +17,7 @@ public class AdminGeneroServlet extends BaseServlet {
 
     private final GeneroService generoService = new GeneroService();
 
+    // 1. Função para rotear ações GET de gêneros (listar, novo, editar por ID, excluir por ID)
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         switch (this.acao(req)) {
@@ -33,6 +34,7 @@ public class AdminGeneroServlet extends BaseServlet {
         }
     }
 
+    // 2. Função para salvar ou editar o gênero com base nos dados enviados
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         req.setCharacterEncoding("UTF-8");

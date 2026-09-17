@@ -44,10 +44,12 @@ public class UsuarioService {
         return usuario;
     }
 
+    // 1. Função para listar todos os usuários
     public List<Usuario> listar() {
         return this.usuarioDAO.listarTodos();
     }
 
+    // 2. Função para buscar o usuário com base no ID
     public Usuario buscarPorId(Long id) {
         if (id == null) {
             return null;
@@ -57,8 +59,8 @@ public class UsuarioService {
 
     /**
      * Regra de salvamento:
-     * - sem id  -> cadastro novo
-     * - com id  -> alteracao (usuario precisa existir)
+     * - sem id -> cadastro novo
+     * - com id -> alteracao (usuario precisa existir)
      */
     public void salvar(Usuario usuario) {
         if (usuario == null) {
@@ -97,12 +99,14 @@ public class UsuarioService {
         this.usuarioDAO.deletar(id);
     }
 
+    // 3. Função auxiliar para preparar e normalizar os campos do usuário
     private void prepararDados(Usuario usuario) {
         usuario.setNome(this.normalizar(usuario.getNome()));
         usuario.setLogin(this.normalizar(usuario.getLogin()));
         usuario.setSenha(this.normalizar(usuario.getSenha()));
     }
 
+    // 4. Função auxiliar para validar campos obrigatórios do usuário
     private void validarCamposObrigatorios(Usuario usuario) {
         if (usuario.getNome() == null) {
             throw new IllegalArgumentException("Nome e obrigatorio.");
@@ -118,18 +122,21 @@ public class UsuarioService {
         }
     }
 
+    // 5. Função auxiliar para validar se a senha atende ao tamanho mínimo
     private void validarSenha(String senha) {
         if (senha.length() < SENHA_MINIMA) {
             throw new IllegalArgumentException("Senha deve ter no minimo " + SENHA_MINIMA + " caracteres.");
         }
     }
 
+    // 6. Função auxiliar para verificar se o perfil associado existe
     private void validarPerfilExistente(Long perfilId) {
         if (this.perfilDAO.buscarPorId(perfilId) == null) {
             throw new IllegalArgumentException("Perfil informado nao existe.");
         }
     }
 
+    // 7. Função auxiliar para garantir que o login do usuário seja único
     private void validarLoginUnico(Usuario usuario) {
         Usuario existente = this.usuarioDAO.buscarPorLogin(usuario.getLogin());
         if (existente == null) {
@@ -145,6 +152,7 @@ public class UsuarioService {
         }
     }
 
+    // 8. Função auxiliar para normalizar dados (remover espaços vazios)
     private String normalizar(String valor) {
         if (valor == null) {
             return null;

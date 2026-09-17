@@ -15,6 +15,7 @@ public class CadastroServlet extends BaseServlet {
     private static final String VIEW = "/WEB-INF/jsp/cadastro.jsp";
     private final UsuarioService usuarioService = new UsuarioService();
 
+    // 1. Função para exibir a página de formulário de cadastro
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         // Se já estiver logado, redireciona para o início
@@ -26,6 +27,7 @@ public class CadastroServlet extends BaseServlet {
         this.forward(req, resp, VIEW);
     }
 
+    // 2. Função para processar o cadastro e efetuar login automático do novo usuário
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         req.setCharacterEncoding("UTF-8");

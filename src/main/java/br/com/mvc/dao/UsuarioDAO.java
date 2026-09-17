@@ -20,12 +20,12 @@ public class UsuarioDAO extends MysqlDAO {
         super();
     }
 
+    // 1. Função para autenticar usuário buscando por login e senha
     public Usuario buscarPorLoginESenha(String login, String senha) {
-        String sql =
-                "SELECT u.id, u.nome, u.login, u.senha, u.perfil_id, p.nome AS perfil_nome "
-                        + "FROM usuarios u "
-                        + "INNER JOIN perfis p ON p.id = u.perfil_id "
-                        + "WHERE u.login = ? AND u.senha = ?";
+        String sql = "SELECT u.id, u.nome, u.login, u.senha, u.perfil_id, p.nome AS perfil_nome "
+                + "FROM usuarios u "
+                + "INNER JOIN perfis p ON p.id = u.perfil_id "
+                + "WHERE u.login = ? AND u.senha = ?";
         try (ResultSet rs = super.executar(sql, login, senha)) {
             if (rs.next()) {
                 return this.mapearComPerfil(rs);
@@ -36,12 +36,12 @@ public class UsuarioDAO extends MysqlDAO {
         return null;
     }
 
+    // 2. Função para listar todos os usuários cadastrados com seus perfis
     public List<Usuario> listarTodos() {
-        String sql =
-                "SELECT u.id, u.nome, u.login, u.senha, u.perfil_id, p.nome AS perfil_nome "
-                        + "FROM usuarios u "
-                        + "INNER JOIN perfis p ON p.id = u.perfil_id "
-                        + "ORDER BY u.nome";
+        String sql = "SELECT u.id, u.nome, u.login, u.senha, u.perfil_id, p.nome AS perfil_nome "
+                + "FROM usuarios u "
+                + "INNER JOIN perfis p ON p.id = u.perfil_id "
+                + "ORDER BY u.nome";
         List<Usuario> lista = new ArrayList<>();
         try (ResultSet rs = super.executar(sql)) {
             while (rs.next()) {
@@ -53,12 +53,12 @@ public class UsuarioDAO extends MysqlDAO {
         return lista;
     }
 
+    // 3. Função para buscar o usuário com base no ID
     public Usuario buscarPorId(Long id) {
-        String sql =
-                "SELECT u.id, u.nome, u.login, u.senha, u.perfil_id, p.nome AS perfil_nome "
-                        + "FROM usuarios u "
-                        + "INNER JOIN perfis p ON p.id = u.perfil_id "
-                        + "WHERE u.id = ?";
+        String sql = "SELECT u.id, u.nome, u.login, u.senha, u.perfil_id, p.nome AS perfil_nome "
+                + "FROM usuarios u "
+                + "INNER JOIN perfis p ON p.id = u.perfil_id "
+                + "WHERE u.id = ?";
         try (ResultSet rs = super.executar(sql, id)) {
             if (rs.next()) {
                 return this.mapearComPerfil(rs);
@@ -69,12 +69,12 @@ public class UsuarioDAO extends MysqlDAO {
         return null;
     }
 
+    // 4. Função para buscar usuário pelo login
     public Usuario buscarPorLogin(String login) {
-        String sql =
-                "SELECT u.id, u.nome, u.login, u.senha, u.perfil_id, p.nome AS perfil_nome "
-                        + "FROM usuarios u "
-                        + "INNER JOIN perfis p ON p.id = u.perfil_id "
-                        + "WHERE u.login = ?";
+        String sql = "SELECT u.id, u.nome, u.login, u.senha, u.perfil_id, p.nome AS perfil_nome "
+                + "FROM usuarios u "
+                + "INNER JOIN perfis p ON p.id = u.perfil_id "
+                + "WHERE u.login = ?";
         try (ResultSet rs = super.executar(sql, login)) {
             if (rs.next()) {
                 return this.mapearComPerfil(rs);
@@ -85,6 +85,7 @@ public class UsuarioDAO extends MysqlDAO {
         return null;
     }
 
+    // 5. Função que conta a quantidade de usuários associados a um perfil
     public int contarPorPerfil(Long perfilId) {
         String sql = "SELECT COUNT(*) AS total FROM usuarios WHERE perfil_id = ?";
         try (ResultSet rs = super.executar(sql, perfilId)) {
@@ -97,6 +98,7 @@ public class UsuarioDAO extends MysqlDAO {
         return 0;
     }
 
+    // 6. Função para cadastrar um novo usuário no banco de dados
     public void inserir(Usuario usuario) {
         String sql = "INSERT INTO usuarios (nome, login, senha, perfil_id) VALUES (?, ?, ?, ?)";
         try {
@@ -111,6 +113,7 @@ public class UsuarioDAO extends MysqlDAO {
         }
     }
 
+    // 7. Função que edita o usuário com base no ID
     public void alterar(Usuario usuario) {
         String sql = "UPDATE usuarios SET nome = ?, login = ?, senha = ?, perfil_id = ? WHERE id = ?";
         try {
@@ -126,6 +129,7 @@ public class UsuarioDAO extends MysqlDAO {
         }
     }
 
+    // 8. Função para deletar um usuário com base no ID
     public void deletar(Long id) {
         String sql = "DELETE FROM usuarios WHERE id = ?";
         try {
@@ -135,6 +139,7 @@ public class UsuarioDAO extends MysqlDAO {
         }
     }
 
+    // 9. Função auxiliar para mapear ResultSet para o objeto Usuario com o Perfil
     private Usuario mapearComPerfil(ResultSet rs) throws SQLException {
         Usuario usuario = new Usuario();
         usuario.setId(rs.getLong("id"));

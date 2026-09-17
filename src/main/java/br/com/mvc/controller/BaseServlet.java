@@ -14,6 +14,7 @@ import java.io.IOException;
  */
 public abstract class BaseServlet extends HttpServlet {
 
+    // 1. Função para extrair a ação solicitada na requisição (padrão: "listar")
     protected String acao(HttpServletRequest req) {
         String acao = req.getParameter("acao");
         if (acao == null || acao.isBlank()) {
@@ -22,10 +23,12 @@ public abstract class BaseServlet extends HttpServlet {
         return acao;
     }
 
+    // 2. Função auxiliar para obter parâmetro em formato String
     protected String param(HttpServletRequest req, String nome) {
         return req.getParameter(nome);
     }
 
+    // 3. Função auxiliar para obter parâmetro e converter para Long
     protected Long paramLong(HttpServletRequest req, String nome) {
         String valor = req.getParameter(nome);
         if (valor == null || valor.isBlank()) {
@@ -38,11 +41,13 @@ public abstract class BaseServlet extends HttpServlet {
         }
     }
 
+    // 4. Função para encaminhar a requisição para uma página JSP (forward)
     protected void forward(HttpServletRequest req, HttpServletResponse resp, String jsp)
             throws ServletException, IOException {
         req.getRequestDispatcher(jsp).forward(req, resp);
     }
 
+    // 5. Função para redirecionar para outra rota (redirect)
     protected void redirect(HttpServletRequest req, HttpServletResponse resp, String caminho)
             throws IOException {
         resp.sendRedirect(req.getContextPath() + caminho);

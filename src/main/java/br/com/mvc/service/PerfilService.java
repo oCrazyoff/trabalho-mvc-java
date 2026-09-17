@@ -22,10 +22,12 @@ public class PerfilService {
         this.usuarioDAO = new UsuarioDAO();
     }
 
+    // 1. Função para listar todos os perfis
     public List<Perfil> listar() {
         return this.perfilDAO.listarTodos();
     }
 
+    // 2. Função para buscar o perfil com base no ID
     public Perfil buscarPorId(Long id) {
         if (id == null) {
             return null;
@@ -78,12 +80,14 @@ public class PerfilService {
         this.perfilDAO.deletar(id);
     }
 
+    // 3. Função auxiliar para validar preenchimento obrigatório do nome do perfil
     private void validarNomeObrigatorio(String nome) {
         if (nome == null) {
             throw new IllegalArgumentException("Nome e obrigatorio.");
         }
     }
 
+    // 4. Função auxiliar para validar se o nome do perfil já está cadastrado
     private void validarNomeUnico(Perfil perfil) {
         Perfil existente = this.perfilDAO.buscarPorNome(perfil.getNome());
         if (existente == null) {
@@ -97,6 +101,7 @@ public class PerfilService {
         }
     }
 
+    // 5. Função auxiliar para remover espaços extras da string de nome do perfil
     private String normalizar(String valor) {
         if (valor == null) {
             return null;
