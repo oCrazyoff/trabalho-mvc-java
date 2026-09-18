@@ -11,7 +11,7 @@ Trabalho prático desenvolvido para a disciplina **Aplicações para a Internet*
 
 ## 📌 Sobre o Projeto
 
-O projeto é uma aplicação web de recomendação de livros baseada na arquitetura **MVC (Model-View-Controller)**, desenvolvida em **Java** com **Servlets**, **JSP (JavaServer Pages)**, **JDBC** e banco de dados **MySQL**.
+O projeto é uma aplicação web de recomendação de livros baseada na arquitetura **MVC (Model-View-Controller)**, desenvolvida em **Java** com **Servlets**, **JSP (JavaServer Pages)** e **JDBC**.
 
 A plataforma permite:
 
@@ -30,12 +30,15 @@ A plataforma permite:
 - **Linguagem:** Java 17
 - **Gerenciador de dependências:** Apache Maven
 - **API Web:** Jakarta Servlet 6.0
-- **Interface:** JSP, JSTL e CSS
+- **Interface:** JSP, JSTL, CSS e [Tailwind CSS](https://tailwindcss.com/)
+- **Gerenciador de dependências do frontend:** npm
 - **Persistência:** JDBC
 - **Banco de dados:** MySQL 8.4
 - **Servidor web / Servlet container:** Apache Tomcat 10.1
 - **Containerização:** Docker e Docker Compose
 - **Administração do banco:** phpMyAdmin
+
+O Tailwind CSS é compilado a partir dos arquivos do frontend pelo script `build` definido no `package.json`. O CSS deve ser gerado antes da criação do arquivo `.war` pelo Maven.
 
 ---
 
@@ -52,7 +55,7 @@ O banco de dados já está modelado e sua definição está disponível no arqui
 - `usuario_generos`: relaciona usuários aos seus gêneros favoritos;
 - `livro_generos`: relaciona livros aos seus respectivos gêneros.
 
-As tabelas `usuario_generos` e `livro_generos` representam relacionamentos muitos-para-muitos. O banco também possui restrições de unicidade para nomes de gêneros, ISBNs e logins de usuários, além de chaves estrangeiras com exclusão em cascata nos relacionamentos apropriados.
+As tabelas `usuario_generos` e `livro_generos` representam relacionamentos muitos-para-muitos. O banco também possui restrições de unicidade para nomes de gêneros, ISBNs e logins de usuários, além de chaves estrangeiras para garantir a integridade dos relacionamentos.
 
 > O arquivo `init.sql` é executado automaticamente pelo container do MySQL na primeira inicialização do volume do banco.
 
@@ -63,6 +66,7 @@ As tabelas `usuario_generos` e `livro_generos` representam relacionamentos muito
 ### Pré-requisitos
 
 - [Docker](https://www.docker.com/) instalado;
+- [Node.js e npm](https://nodejs.org/) instalados;
 - [Maven](https://maven.apache.org/download.cgi) instalado;
 - [JDK 17](https://www.oracle.com/java/technologies/downloads/) ou superior instalado.
 
@@ -75,7 +79,19 @@ As tabelas `usuario_generos` e `livro_generos` representam relacionamentos muito
    cd trabalho-mvc-java
    ```
 
-2. Compile e empacote a aplicação como `.war`:
+2. Instale as dependências do frontend:
+
+   ```bash
+   npm install
+   ```
+
+3. Compile os arquivos CSS do Tailwind:
+
+   ```bash
+   npm run build
+   ```
+
+4. Compile e empacote a aplicação como `.war`:
 
    ```bash
    mvn clean package
@@ -83,19 +99,19 @@ As tabelas `usuario_generos` e `livro_generos` representam relacionamentos muito
 
    O arquivo será gerado em `deploy/mvc.war`.
 
-3. Suba os containers do MySQL, Tomcat e phpMyAdmin:
+5. Suba os containers do MySQL, Tomcat e phpMyAdmin:
 
    ```bash
    docker compose up -d
    ```
 
-4. Acesse a aplicação no navegador:
+6. Acesse a aplicação no navegador:
 
    ```text
    http://localhost:8080/mvc
    ```
 
-5. Para acessar o phpMyAdmin:
+7. Para acessar o phpMyAdmin:
 
    ```text
    http://localhost:8081
@@ -105,12 +121,14 @@ As tabelas `usuario_generos` e `livro_generos` representam relacionamentos muito
 
 ### Recompilação após alterações
 
-Sempre que houver alterações no código Java ou nas páginas JSP, gere novamente o arquivo WAR:
+Sempre que houver alterações no frontend, nas páginas JSP ou no código Java, execute:
 
 ```bash
+npm run build
 mvn clean package
-docker compose restart tomcat
 ```
+
+Não é necessário executar `docker compose restart tomcat` após as alterações. Basta gerar novamente o CSS com `npm run build` e empacotar a aplicação com `mvn clean package`. O arquivo WAR atualizado será gerado em `deploy/mvc.war`.
 
 ### Encerrando os containers
 
@@ -133,10 +151,10 @@ docker compose down -v
 ```text
 .
 ├── pom.xml                          # Configuração do Maven
-├── docker-compose.yml               # Serviços MySQL, Tomcat e phpMyAdmin
-├── init.sql                         # Modelo, estrutura e dados iniciais do banco
 ├── package.json                     # Dependências e scripts do frontend CSS
 ├── package-lock.json
+├── docker-compose.yml               # Serviços MySQL, Tomcat e phpMyAdmin
+├── init.sql                         # Modelo, estrutura e dados iniciais do banco
 ├── deploy/                          # Arquivo WAR gerado pelo Maven
 └── src
     └── main
@@ -163,7 +181,7 @@ docker compose down -v
             │   │   └── welcome.jsp
             │   ├── tags                 # Tags reutilizáveis, incluindo o layout
             │   └── web.xml              # Configuração da aplicação web
-            ├── css                      # Folhas de estilo
+            ├── css                      # Folhas de estilo, incluindo o CSS compilado do Tailwind
             ├── images                   # Logos e imagens da aplicação
             └── index.jsp                # Página inicial
 ```
