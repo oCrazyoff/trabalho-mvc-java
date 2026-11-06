@@ -12,15 +12,25 @@ services:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql
 
-  tomcat:
+  backend:
     image: tomcat:10.1-jdk21
-    container_name: mvc-java-tomcat
+    container_name: mvc-java-backend
+    ports:
+      - "8081:8080"
+    volumes:
+      - ./backend/deploy:/usr/local/tomcat/webapps
+    depends_on:
+      - mysql
+
+  front:
+    image: tomcat:10.1-jdk21
+    container_name: mvc-java-front
     ports:
       - "8080:8080"
     volumes:
-      - ./deploy:/usr/local/tomcat/webapps
+      - ./front/deploy:/usr/local/tomcat/webapps
     depends_on:
       - mysql
 
@@ -28,7 +38,7 @@ services:
     image: phpmyadmin:latest
     container_name: mvc-java-phpmyadmin
     ports:
-      - "8081:80"
+      - "8082:80"
     environment:
       PMA_HOST: mysql
       PMA_PORT: 3306

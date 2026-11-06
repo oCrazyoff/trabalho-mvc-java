@@ -38,13 +38,24 @@ A plataforma permite:
 - **Containerização:** Docker e Docker Compose
 - **Administração do banco:** phpMyAdmin
 
-O Tailwind CSS é compilado a partir dos arquivos do frontend pelo script `build` definido no `package.json`. O CSS deve ser gerado antes da criação do arquivo `.war` pelo Maven.
+O Tailwind CSS é compilado a partir dos arquivos do frontend pelo script `build` definido no `package.json` de cada projeto. O CSS deve ser gerado antes da criação do arquivo `.war` pelo Maven.
+
+---
+
+## 🧩 Organização em Front e Backend
+
+O repositório está dividido em dois projetos, cada um executado em seu próprio container Tomcat:
+
+- **`backend/`** — será adaptado para uma **API REST** (Controller → Service → DAO) que retorna JSON;
+- **`front/`** — será adaptado para consumir a API: os controllers requisitam o backend e usam o JSON retornado para montar as páginas JSP.
+
+> Neste momento, as duas pastas ainda contêm a versão monolítica do sistema (a mesma do release anterior) e ambas acessam o mesmo banco MySQL. A adaptação para API será feita nas próximas etapas.
 
 ---
 
 ## 🗄️ Banco de Dados
 
-O banco de dados já está modelado e sua definição está disponível no arquivo [`init.sql`](init.sql). O script cria o banco `mvc_java`, suas tabelas, índices, chaves estrangeiras e dados iniciais.
+O banco de dados já está modelado e sua definição está disponível no arquivo [`backend/init.sql`](backend/init.sql). O script cria o banco `mvc_java`, suas tabelas, índices, chaves estrangeiras e dados iniciais.
 
 ### Principais tabelas
 
@@ -79,56 +90,56 @@ As tabelas `usuario_generos` e `livro_generos` representam relacionamentos muito
    cd trabalho-mvc-java
    ```
 
-2. Instale as dependências do frontend:
+2. Compile o **backend** (CSS do Tailwind + arquivo `.war`):
 
    ```bash
+   cd backend
    npm install
-   ```
-
-3. Compile os arquivos CSS do Tailwind:
-
-   ```bash
    npm run build
+   mvn clean package
+   cd ..
    ```
 
-4. Compile e empacote a aplicação como `.war`:
+   O arquivo será gerado em `backend/deploy/mvc.war`.
+
+3. Compile o **front**:
 
    ```bash
+   cd front
+   npm install
+   npm run build
    mvn clean package
+   cd ..
    ```
 
-   O arquivo será gerado em `deploy/mvc.war`.
+   O arquivo será gerado em `front/deploy/mvc.war`.
 
-5. Suba os containers do MySQL, Tomcat e phpMyAdmin:
+4. Suba os containers do MySQL, dos dois Tomcats (front e backend) e do phpMyAdmin:
 
    ```bash
    docker compose up -d
    ```
 
-6. Acesse a aplicação no navegador:
+5. Acesse as aplicações no navegador:
 
-   ```text
-   http://localhost:8080/mvc
-   ```
+   | Serviço | Endereço |
+   |---|---|
+   | Front | http://localhost:8080/mvc |
+   | Backend | http://localhost:8081/mvc |
+   | phpMyAdmin | http://localhost:8082 |
 
-7. Para acessar o phpMyAdmin:
-
-   ```text
-   http://localhost:8081
-   ```
-
-   Utilize `mysql` como servidor, `mvc_user` como usuário e `mvc123` como senha. O banco utilizado pela aplicação é `mvc_java`.
+   No phpMyAdmin, utilize `mysql` como servidor, `mvc_user` como usuário e `mvc123` como senha. O banco utilizado pela aplicação é `mvc_java`.
 
 ### Recompilação após alterações
 
-Sempre que houver alterações no frontend, nas páginas JSP ou no código Java, execute:
+Sempre que houver alterações no frontend, nas páginas JSP ou no código Java, execute dentro da pasta do projeto alterado (`backend/` ou `front/`):
 
 ```bash
 npm run build
 mvn clean package
 ```
 
-Não é necessário executar `docker compose restart tomcat` após as alterações. Basta gerar novamente o CSS com `npm run build` e empacotar a aplicação com `mvn clean package`. O arquivo WAR atualizado será gerado em `deploy/mvc.war`.
+Não é necessário reiniciar os containers após as alterações: o Tomcat recarrega automaticamente o WAR atualizado gerado em `deploy/mvc.war` de cada projeto.
 
 ### Encerrando os containers
 
@@ -150,40 +161,47 @@ docker compose down -v
 
 ```text
 .
-├── pom.xml                          # Configuração do Maven
-├── package.json                     # Dependências e scripts do frontend CSS
-├── package-lock.json
-├── docker-compose.yml               # Serviços MySQL, Tomcat e phpMyAdmin
-├── init.sql                         # Modelo, estrutura e dados iniciais do banco
-├── deploy/                          # Arquivo WAR gerado pelo Maven
-└── src
-    └── main
-        ├── java
-        │   └── br
-        │       └── com
-        │           └── mvc
-        │               ├── config       # Configurações e conexão com o banco
-        │               ├── controller   # Servlets e controle das requisições
-        │               ├── dao          # Acesso e operações no banco de dados
-        │               ├── filter       # Filtros de autenticação e autorização
-        │               ├── model        # Entidades do domínio
-        │               └── service      # Regras de negócio
-        └── webapp
-            ├── WEB-INF
-            │   ├── jsp
-            │   │   ├── admin           # Telas administrativas
-            │   │   │   ├── generos
-            │   │   │   ├── livros
-            │   │   │   └── usuarios
-            │   │   ├── comum            # Telas para usuários comuns
-            │   │   ├── cadastro.jsp
-            │   │   ├── login.jsp
-            │   │   └── welcome.jsp
-            │   ├── tags                 # Tags reutilizáveis, incluindo o layout
-            │   └── web.xml              # Configuração da aplicação web
-            ├── css                      # Folhas de estilo, incluindo o CSS compilado do Tailwind
-            ├── images                   # Logos e imagens da aplicação
-            └── index.jsp                # Página inicial
+├── docker-compose.yml               # Serviços MySQL, Tomcat (front e backend) e phpMyAdmin
+├── README.md
+├── backend/                         # Projeto do backend (futura API REST)
+│   ├── init.sql                     # Modelo, estrutura e dados iniciais do banco
+│   ├── pom.xml                      # Configuração do Maven
+│   ├── package.json                 # Dependências e scripts do frontend CSS
+│   ├── package-lock.json
+│   ├── deploy/                      # Arquivo WAR gerado pelo Maven
+│   └── src/main/                    # Estrutura descrita abaixo
+└── front/                           # Projeto do front (futuro consumidor da API)
+    ├── pom.xml
+    ├── package.json
+    ├── package-lock.json
+    ├── deploy/
+    └── src/main/
+```
+
+Estrutura interna de cada projeto (`src/main`):
+
+```text
+src/main
+├── java/br/com/mvc
+│   ├── config       # Configurações e conexão com o banco
+│   ├── controller   # Servlets e controle das requisições
+│   ├── dao          # Acesso e operações no banco de dados
+│   ├── filter       # Filtros de autenticação e autorização
+│   ├── model        # Entidades do domínio
+│   └── service      # Regras de negócio
+└── webapp
+    ├── WEB-INF
+    │   ├── jsp
+    │   │   ├── admin            # Telas administrativas (generos, livros, usuarios)
+    │   │   ├── comum            # Telas para usuários comuns
+    │   │   ├── cadastro.jsp
+    │   │   ├── login.jsp
+    │   │   └── welcome.jsp
+    │   ├── tags                 # Tags reutilizáveis, incluindo o layout
+    │   └── web.xml              # Configuração da aplicação web
+    ├── css                      # Folhas de estilo, incluindo o CSS compilado do Tailwind
+    ├── images                   # Logos e imagens da aplicação
+    └── index.jsp                # Página inicial
 ```
 
 ---
