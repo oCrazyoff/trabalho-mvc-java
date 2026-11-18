@@ -1,0 +1,27 @@
+{
+  "name": "trabalho-mvc",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "npx @tailwindcss/cli -i ./src/main/webapp/css/input.css -o ./src/main/webapp/css/output.css --watch",
+    "build": "npx @tailwindcss/cli -i ./src/main/webapp/css/input.css -o ./src/main/webapp/css/output.css --minify",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oCrazyoff/trabalho-mvc-java.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/oCrazyoff/trabalho-mvc-java/issues"
+  },
+  "homepage": "https://github.com/oCrazyoff/trabalho-mvc-java#readme",
+  "dependencies": {
+    "@tailwindcss/cli": "^4.3.3",
+    "tailwindcss": "^4.3.3"
+  }
+}

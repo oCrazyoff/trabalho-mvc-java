@@ -38,7 +38,22 @@ A plataforma permite:
 - **Containerização:** Docker e Docker Compose
 - **Administração do banco:** phpMyAdmin
 
-O Tailwind CSS é compilado a partir dos arquivos do frontend pelo script `build` definido no `package.json`. O CSS deve ser gerado antes da criação do arquivo `.war` pelo Maven.
+O Tailwind CSS é compilado pelo script `build` definido no `package.json` de cada projeto. O CSS deve ser gerado antes da criação do arquivo `.war` pelo Maven.
+
+---
+
+## 🧩 Arquitetura: frontend e backend
+
+O projeto está sendo migrado de um monólito para uma **API REST**. Para isso, o código foi dividido em dois projetos, que **neste momento ainda são cópias idênticas do monólito**:
+
+| Projeto | Pasta | Container | URL local | Papel futuro |
+|---|---|---|---|---|
+| Frontend | [`frontend/`](frontend/) | `mvc-java-frontend` | http://localhost:8080/mvc | Interface web (JSP), consumindo a API |
+| Backend | [`backend/`](backend/) | `mvc-java-backend` | http://localhost:8082/mvc | API REST com acesso ao banco |
+
+Cada projeto tem seu próprio `pom.xml`, `package.json` e `src/`, e gera seu próprio `deploy/mvc.war`. Cada um roda em um container Tomcat separado.
+
+Os containers estão na mesma rede Docker (`mvc-network`). De dentro do frontend, o backend é acessado pelo nome do serviço: `http://backend:8080/mvc`. Esse endereço já está disponível no frontend pela variável de ambiente `BACKEND_URL`.
 
 ---
 
@@ -79,39 +94,38 @@ As tabelas `usuario_generos` e `livro_generos` representam relacionamentos muito
    cd trabalho-mvc-java
    ```
 
-2. Instale as dependências do frontend:
+2. Em **cada** projeto (`frontend/` e `backend/`), instale as dependências, compile o CSS do Tailwind e gere o `.war`:
 
    ```bash
+   cd frontend
    npm install
-   ```
-
-3. Compile os arquivos CSS do Tailwind:
-
-   ```bash
    npm run build
-   ```
-
-4. Compile e empacote a aplicação como `.war`:
-
-   ```bash
    mvn clean package
+
+   cd ../backend
+   npm install
+   npm run build
+   mvn clean package
+
+   cd ..
    ```
 
-   O arquivo será gerado em `deploy/mvc.war`.
+   Os arquivos serão gerados em `frontend/deploy/mvc.war` e `backend/deploy/mvc.war`.
 
-5. Suba os containers do MySQL, Tomcat e phpMyAdmin:
+3. Na raiz do repositório, suba os containers do MySQL, frontend, backend e phpMyAdmin:
 
    ```bash
    docker compose up -d
    ```
 
-6. Acesse a aplicação no navegador:
+4. Acesse as aplicações no navegador:
 
    ```text
-   http://localhost:8080/mvc
+   Frontend: http://localhost:8080/mvc
+   Backend:  http://localhost:8082/mvc
    ```
 
-7. Para acessar o phpMyAdmin:
+5. Para acessar o phpMyAdmin:
 
    ```text
    http://localhost:8081
@@ -121,14 +135,14 @@ As tabelas `usuario_generos` e `livro_generos` representam relacionamentos muito
 
 ### Recompilação após alterações
 
-Sempre que houver alterações no frontend, nas páginas JSP ou no código Java, execute:
+Sempre que houver alterações em um dos projetos, execute dentro da pasta dele (`frontend/` ou `backend/`):
 
 ```bash
 npm run build
 mvn clean package
 ```
 
-Não é necessário executar `docker compose restart tomcat` após as alterações. Basta gerar novamente o CSS com `npm run build` e empacotar a aplicação com `mvn clean package`. O arquivo WAR atualizado será gerado em `deploy/mvc.war`.
+Não é necessário reiniciar os containers após as alterações. O Tomcat detecta o novo `deploy/mvc.war` do projeto e faz o redeploy automaticamente.
 
 ### Encerrando os containers
 
@@ -150,40 +164,51 @@ docker compose down -v
 
 ```text
 .
-├── pom.xml                          # Configuração do Maven
-├── package.json                     # Dependências e scripts do frontend CSS
-├── package-lock.json
-├── docker-compose.yml               # Serviços MySQL, Tomcat e phpMyAdmin
-├── init.sql                         # Modelo, estrutura e dados iniciais do banco
-├── deploy/                          # Arquivo WAR gerado pelo Maven
-└── src
-    └── main
-        ├── java
-        │   └── br
-        │       └── com
-        │           └── mvc
-        │               ├── config       # Configurações e conexão com o banco
-        │               ├── controller   # Servlets e controle das requisições
-        │               ├── dao          # Acesso e operações no banco de dados
-        │               ├── filter       # Filtros de autenticação e autorização
-        │               ├── model        # Entidades do domínio
-        │               └── service      # Regras de negócio
-        └── webapp
-            ├── WEB-INF
-            │   ├── jsp
-            │   │   ├── admin           # Telas administrativas
-            │   │   │   ├── generos
-            │   │   │   ├── livros
-            │   │   │   └── usuarios
-            │   │   ├── comum            # Telas para usuários comuns
-            │   │   ├── cadastro.jsp
-            │   │   ├── login.jsp
-            │   │   └── welcome.jsp
-            │   ├── tags                 # Tags reutilizáveis, incluindo o layout
-            │   └── web.xml              # Configuração da aplicação web
-            ├── css                      # Folhas de estilo, incluindo o CSS compilado do Tailwind
-            ├── images                   # Logos e imagens da aplicação
-            └── index.jsp                # Página inicial
+├── docker-compose.yml               # Serviços MySQL, frontend, backend e phpMyAdmin
+├── init.sql                         # Modelo, estrutura e dados iniciais do banco (compartilhado)
+├── frontend/                        # Projeto da interface web
+│   ├── pom.xml                      # Configuração do Maven
+│   ├── package.json                 # Dependências e scripts do Tailwind
+│   ├── deploy/                      # WAR gerado pelo Maven (montado no container do frontend)
+│   └── src/                         # Estrutura descrita abaixo
+└── backend/                         # Projeto da API REST
+    ├── pom.xml
+    ├── package.json
+    ├── deploy/                      # WAR gerado pelo Maven (montado no container do backend)
+    └── src/                         # Estrutura descrita abaixo
+```
+
+Estrutura do `src/` (hoje igual nos dois projetos):
+
+```text
+src
+└── main
+    ├── java
+    │   └── br
+    │       └── com
+    │           └── mvc
+    │               ├── config       # Configurações e conexão com o banco
+    │               ├── controller   # Servlets e controle das requisições
+    │               ├── dao          # Acesso e operações no banco de dados
+    │               ├── filter       # Filtros de autenticação e autorização
+    │               ├── model        # Entidades do domínio
+    │               └── service      # Regras de negócio
+    └── webapp
+        ├── WEB-INF
+        │   ├── jsp
+        │   │   ├── admin           # Telas administrativas
+        │   │   │   ├── generos
+        │   │   │   ├── livros
+        │   │   │   └── usuarios
+        │   │   ├── comum            # Telas para usuários comuns
+        │   │   ├── cadastro.jsp
+        │   │   ├── login.jsp
+        │   │   └── welcome.jsp
+        │   ├── tags                 # Tags reutilizáveis, incluindo o layout
+        │   └── web.xml              # Configuração da aplicação web
+        ├── css                      # Folhas de estilo, incluindo o CSS compilado do Tailwind
+        ├── images                   # Logos e imagens da aplicação
+        └── index.jsp                # Página inicial
 ```
 
 ---

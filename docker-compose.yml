@@ -13,16 +13,37 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - mvc-network
 
-  tomcat:
+  # API REST (por enquanto, cópia idêntica do monolito)
+  backend:
     image: tomcat:10.1-jdk21
-    container_name: mvc-java-tomcat
+    container_name: mvc-java-backend
+    ports:
+      - "8082:8080"
+    volumes:
+      - ./backend/deploy:/usr/local/tomcat/webapps
+    depends_on:
+      - mysql
+    networks:
+      - mvc-network
+
+  # Interface web (por enquanto, cópia idêntica do monolito)
+  frontend:
+    image: tomcat:10.1-jdk21
+    container_name: mvc-java-frontend
     ports:
       - "8080:8080"
     volumes:
-      - ./deploy:/usr/local/tomcat/webapps
+      - ./frontend/deploy:/usr/local/tomcat/webapps
+    environment:
+      # Endereço do backend dentro da rede Docker, para uso futuro
+      BACKEND_URL: http://backend:8080/mvc
     depends_on:
-      - mysql
+      - backend
+    networks:
+      - mvc-network
 
   phpmyadmin:
     image: phpmyadmin:latest
@@ -34,6 +55,12 @@ services:
       PMA_PORT: 3306
     depends_on:
       - mysql
+    networks:
+      - mvc-network
+
+networks:
+  mvc-network:
+    driver: bridge
 
 volumes:
   mysql_data:
