@@ -5,6 +5,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import br.com.mvc.service.DashboardService;
+import br.com.mvc.model.Dashboard;
 
 import java.io.IOException;
 
@@ -17,17 +18,19 @@ public class DashboardServlet extends BaseServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 
-        // pega as informações dos cards
-        req.setAttribute("totalLivros", dashboardService.totalLivros());
-        req.setAttribute("totalGeneros", dashboardService.totalGeneros());
-        req.setAttribute("totalUsuarios", dashboardService.totalUsuarios());
-        req.setAttribute("livroMaisRecomendado", dashboardService.maisRecomendado());
+        // busca todos os dados do painel em uma única requisição à API
+        Dashboard dashboard = this.dashboardService.carregar();
 
-        // Dados dos Gráficos
-        req.setAttribute("generosMaisPopulares", dashboardService.generosMaisPopulares());
-        req.setAttribute("livrosPorGenero", dashboardService.livrosPorGenero());
+        // cards
+        req.setAttribute("totalLivros", dashboard.getTotalLivros());
+        req.setAttribute("totalGeneros", dashboard.getTotalGeneros());
+        req.setAttribute("totalUsuarios", dashboard.getTotalUsuarios());
+        req.setAttribute("livroMaisRecomendado", dashboard.getLivroMaisRecomendado());
 
-        // passa para a view
+        // gráficos
+        req.setAttribute("generosMaisPopulares", dashboard.getGenerosMaisPopulares());
+        req.setAttribute("livrosPorGenero", dashboard.getLivrosPorGenero());
+
         this.forward(req, resp, "/WEB-INF/jsp/admin/dashboard.jsp");
     }
 

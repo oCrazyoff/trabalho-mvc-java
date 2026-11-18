@@ -1,100 +1,62 @@
 package br.com.mvc.service;
 
-import br.com.mvc.dao.GeneroDAO;
+import br.com.mvc.config.ApiClient;
 import br.com.mvc.model.Genero;
+import com.google.gson.JsonObject;
+import com.google.gson.reflect.TypeToken;
+
+import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class GeneroService {
 
-    private final GeneroDAO generoDAO = new GeneroDAO();
+    private static final Type LISTA_GENEROS = new TypeToken<List<Genero>>() {
+    }.getType();
 
     // lista apenas os generos do usuario
     public List<Genero> listarPorUsuario(Long usuarioId) {
-
-        if (usuarioId == null) {
-
+        if (usuarioId == null)
             return List.of();
-
-        }
-
-        return this.generoDAO.listarPorUsuario(usuarioId);
-
+        List<Genero> generos = ApiClient.get("/api/usuarios/" + usuarioId + "/generos", LISTA_GENEROS);
+        return generos != null ? generos : List.of();
     }
 
     // lista todos os generos
     public List<Genero> listarGeneros() {
-
-        return this.generoDAO.listarGeneros();
-
+        return ApiClient.get("/api/generos", LISTA_GENEROS);
     }
 
-    // retorna todos os ids de generos vinculado ao usuario
+    // retorna os ids dos generos do usuario (calculado aqui, sem rota extra)
     public Set<Long> listarIdsPorUsuario(Long usuarioId) {
-        if (usuarioId == null) {
-            return Set.of();
-        }
-
-        return this.generoDAO.listarIdsPorUsuario(usuarioId);
-
+        return this.listarPorUsuario(usuarioId).stream()
+                .map(Genero::getId)
+                .collect(Collectors.toSet());
     }
 
-    /**
-     * Alterna o estado: se o gênero estiver salvo, remove. Se não estiver,
-     * adiciona.
-     * 
-     * return true se foi vinculado (marcado), false se foi desvinculado
-     * (desmarcado).
-     */
-
+    // a regra de "se tem remove, se não tem adiciona" agora fica no backend
     public boolean alternarGeneroUsuario(Long usuarioId, Long generoId) {
-
-        if (usuarioId == null || generoId == null) {
-            throw new IllegalArgumentException("Usuário e gênero devem ser informados.");
-        }
-
-        if (this.generoDAO.usuarioPossuiGenero(usuarioId, generoId)) {
-
-            this.generoDAO.desvincularUsuario(usuarioId, generoId);
-            return false;
-
-        } else {
-
-            this.generoDAO.vincularUsuario(usuarioId, generoId);
-            return true;
-
-        }
+        JsonObject resposta = ApiClient.post(
+                "/api/usuarios/" + usuarioId + "/generos/" + generoId, null, JsonObject.class);
+        return resposta != null && resposta.has("vinculado") && resposta.get("vinculado").getAsBoolean();
     }
 
-    // buscar por id
     public Genero buscarPorId(Long id) {
         if (id == null)
             return null;
-        return this.generoDAO.buscarPorId(id);
+        return ApiClient.get("/api/generos/" + id, Genero.class);
     }
 
-    // cadastrar um genero
     public void salvar(Genero genero) {
-        if (genero == null) {
-            throw new IllegalArgumentException("Gênero é obrigatório.");
-        }
-        if (genero.getNome() == null || genero.getNome().isBlank()) {
-            throw new IllegalArgumentException("O nome do gênero é obrigatório.");
-        }
-
         if (genero.getId() == null) {
-            this.generoDAO.inserir(genero);
+            ApiClient.post("/api/generos", genero, null);
         } else {
-            this.generoDAO.alterar(genero);
+            ApiClient.put("/api/generos/" + genero.getId(), genero);
         }
     }
 
-    // deletar um genero
     public void deletar(Long id) {
-        if (id == null) {
-            throw new IllegalArgumentException("ID inválido para exclusão.");
-        }
-        this.generoDAO.deletar(id);
+        ApiClient.delete("/api/generos/" + id);
     }
-
 }
