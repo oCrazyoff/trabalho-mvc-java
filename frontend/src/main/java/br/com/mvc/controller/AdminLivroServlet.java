@@ -1,6 +1,7 @@
 package br.com.mvc.controller;
 
 import br.com.mvc.model.Livro;
+import br.com.mvc.service.GeneroService;
 import br.com.mvc.service.LivroService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -8,6 +9,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 @WebServlet("/admin/livros")
 public class AdminLivroServlet extends BaseServlet {
@@ -16,6 +19,7 @@ public class AdminLivroServlet extends BaseServlet {
     private static final String FORM = "/WEB-INF/jsp/admin/livros/form.jsp";
 
     private final LivroService livroService = new LivroService();
+    private final GeneroService generoService = new GeneroService();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -25,7 +29,14 @@ public class AdminLivroServlet extends BaseServlet {
             case "editar" -> this.form(req, resp, this.livroService.buscarPorId(this.paramLong(req, "id")));
 
             case "excluir" -> {
-                this.livroService.deletar(this.paramLong(req, "id"));
+                try {
+                    this.livroService.deletar(this.paramLong(req, "id"));
+                } catch (IllegalArgumentException e) {
+                    req.setAttribute("erro", e.getMessage());
+                    req.setAttribute("livros", this.livroService.listaLivros());
+                    this.forward(req, resp, LISTA);
+                    return;
+                }
                 this.redirect(req, resp, "/admin/livros");
             }
 
@@ -51,10 +62,11 @@ public class AdminLivroServlet extends BaseServlet {
         }
     }
 
-    // metodo form para popular o formulario
+    // metodo form para popular o formulario (com a lista de gêneros para marcar)
     private void form(HttpServletRequest req, HttpServletResponse resp, Livro livro)
             throws ServletException, IOException {
         req.setAttribute("livro", livro);
+        req.setAttribute("generos", this.generoService.listarGeneros());
         this.forward(req, resp, FORM);
     }
 
@@ -67,18 +79,37 @@ public class AdminLivroServlet extends BaseServlet {
         livro.setSinopse(this.param(req, "sinopse"));
         livro.setIsbn(this.param(req, "isbn"));
         livro.setEditora(this.param(req, "editora"));
-
-        String ano = this.param(req, "anoPublicacao");
-        if (ano != null && !ano.isBlank()) {
-            livro.setAnoPublicacao(Integer.valueOf(ano));
-        }
-
-        String paginas = this.param(req, "numPaginas");
-        if (paginas != null && !paginas.isBlank()) {
-            livro.setNumPaginas(Integer.valueOf(paginas));
-        }
-
+        livro.setAnoPublicacao(this.paramInteger(req, "anoPublicacao"));
+        livro.setNumPaginas(this.paramInteger(req, "numPaginas"));
         livro.setCapaUrl(this.param(req, "capaUrl"));
+
+        // checkboxes de gêneros: vários valores com o mesmo nome
+        List<Long> generosIds = new ArrayList<>();
+        String[] marcados = req.getParameterValues("generosIds");
+        if (marcados != null) {
+            for (String valor : marcados) {
+                try {
+                    generosIds.add(Long.valueOf(valor));
+                } catch (NumberFormatException e) {
+                    // ignora valores inválidos
+                }
+            }
+        }
+        livro.setGenerosIds(generosIds);
+
         return livro;
+    }
+
+    // converte o parâmetro para Integer (null se vazio ou inválido)
+    private Integer paramInteger(HttpServletRequest req, String nome) {
+        String valor = this.param(req, nome);
+        if (valor == null || valor.isBlank()) {
+            return null;
+        }
+        try {
+            return Integer.valueOf(valor.trim());
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 }

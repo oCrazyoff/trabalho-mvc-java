@@ -5,6 +5,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 public class MysqlSingleton {
 
@@ -47,6 +48,8 @@ public class MysqlSingleton {
         for (int i = 0; i < parametros.length; i++) {
             ps.setObject(i + 1, parametros[i]);
         }
+        // fecha o PreparedStatement junto com o ResultSet
+        ps.closeOnCompletion();
         return ps.executeQuery();
     }
 
@@ -58,6 +61,20 @@ public class MysqlSingleton {
                 ps.setObject(i + 1, parametros[i]);
             }
             return ps.executeUpdate();
+        }
+    }
+
+    // 6. Método para executar INSERT e retornar o ID gerado
+    public Long executarInsert(String sql, Object... parametros) throws SQLException {
+        Connection conn = this.obterConexao();
+        try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            for (int i = 0; i < parametros.length; i++) {
+                ps.setObject(i + 1, parametros[i]);
+            }
+            ps.executeUpdate();
+            try (ResultSet rs = ps.getGeneratedKeys()) {
+                return rs.next() ? rs.getLong(1) : null;
+            }
         }
     }
 }

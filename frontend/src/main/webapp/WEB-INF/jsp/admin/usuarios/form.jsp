@@ -59,12 +59,13 @@
 
                 <div>
                     <label for="senha" class="mb-2 block text-sm font-semibold text-gray-700">
-                        Senha <span class="text-red-500">*</span>
+                        Senha <c:if test="${empty usuario.id}"><span class="text-red-500">*</span></c:if>
                     </label>
+                    <%-- A API nunca devolve a senha: na edição, deixar vazio mantém a atual --%>
                     <input type="password" id="senha" name="senha"
-                    value="<c:out value='${usuario.senha}'/>"
-                    required minlength="6" maxlength="255"
-                    placeholder="Mínimo 6 caracteres"
+                    ${empty usuario.id ? 'required' : ''} minlength="6" maxlength="255"
+                    placeholder="${empty usuario.id ? 'Mínimo 6 caracteres' : 'Deixe em branco para manter'}"
+                    autocomplete="new-password"
                     class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-principal focus:bg-white focus:ring-2 focus:ring-principal/20"/>
                 </div>
             </div>

@@ -26,6 +26,15 @@ public class UsuarioService {
         return resposta;
     }
 
+    // cadastro público de leitor: a API cria o usuário e já devolve o token
+    public LoginResposta cadastrar(Usuario usuario) {
+        LoginResposta resposta = ApiClient.post("/api/cadastro", usuario, LoginResposta.class);
+        if (resposta == null || resposta.getToken() == null) {
+            throw new IllegalArgumentException("Não foi possível concluir o cadastro. Tente novamente.");
+        }
+        return resposta;
+    }
+
     public List<Usuario> listar() {
         return ApiClient.get("/api/usuarios", LISTA_USUARIOS);
     }

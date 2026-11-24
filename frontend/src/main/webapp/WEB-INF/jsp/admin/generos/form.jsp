@@ -5,6 +5,13 @@
 <t:layout titulo="Gênero - Lumina">
     <div class="container mx-auto max-w-2xl p-4 sm:p-6 lg:p-8">
 
+        <%-- Mensagem de erro de validação da API --%>
+        <c:if test="${not empty erro}">
+            <div class="mb-6 rounded-xl bg-red-50 p-4 text-sm font-medium text-red-700 border border-red-200">
+                <c:out value="${erro}"/>
+            </div>
+        </c:if>
+
         <div class="mb-8">
             <a href="${pageContext.request.contextPath}/admin/generos"
             class="inline-flex items-center gap-2 text-sm font-medium text-gray-500 transition hover:text-principal">

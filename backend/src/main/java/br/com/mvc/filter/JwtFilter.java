@@ -15,11 +15,15 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.Set;
 
 @WebFilter("/api/*")
 public class JwtFilter implements Filter {
 
     private static final Gson GSON = new Gson();
+
+    // rotas que funcionam sem token
+    private static final Set<String> ROTAS_PUBLICAS = Set.of("/api/login", "/api/cadastro");
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
@@ -30,7 +34,7 @@ public class JwtFilter implements Filter {
 
         // 1. Rotas públicas (sem token)
         String rota = req.getRequestURI().substring(req.getContextPath().length());
-        if (rota.equals("/api/login")) {
+        if (ROTAS_PUBLICAS.contains(rota)) {
             chain.doFilter(request, response);
             return;
         }

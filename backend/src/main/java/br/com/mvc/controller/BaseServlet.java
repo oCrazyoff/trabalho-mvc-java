@@ -1,5 +1,7 @@
 package br.com.mvc.controller;
 
+import br.com.mvc.config.JwtUtil;
+import br.com.mvc.model.Usuario;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import jakarta.servlet.ServletException;
@@ -8,6 +10,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public abstract class BaseServlet extends HttpServlet {
@@ -58,6 +61,17 @@ public abstract class BaseServlet extends HttpServlet {
         this.json(resp, status, Map.of("erro", mensagem != null ? mensagem : "Erro."));
     }
 
+    // gera o token e responde {"token": "...", "usuario": {...}} sem a senha
+    protected void responderComToken(HttpServletResponse resp, int status, Usuario usuario) throws IOException {
+        String token = JwtUtil.gerarToken(usuario);
+        usuario.setSenha(null);
+
+        Map<String, Object> corpo = new LinkedHashMap<>();
+        corpo.put("token", token);
+        corpo.put("usuario", usuario);
+        this.json(resp, status, corpo);
+    }
+
     // "/api/livros/5" -> ["5"]
     protected String[] caminho(HttpServletRequest req) {
         String info = req.getPathInfo();
@@ -90,10 +104,15 @@ public abstract class BaseServlet extends HttpServlet {
         return (Long) req.getAttribute("usuarioId");
     }
 
+    // verifica se o usuário do token é administrador
+    protected boolean isAdmin(HttpServletRequest req) {
+        Long perfilId = (Long) req.getAttribute("perfilId");
+        return perfilId != null && perfilId == 1L;
+    }
+
     // bloqueia quem não é administrador
     protected void exigirAdmin(HttpServletRequest req) {
-        Long perfilId = (Long) req.getAttribute("perfilId");
-        if (perfilId == null || perfilId != 1L) {
+        if (!this.isAdmin(req)) {
             throw new SecurityException("Acesso restrito a administradores.");
         }
     }

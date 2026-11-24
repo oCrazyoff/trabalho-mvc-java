@@ -11,7 +11,7 @@ Trabalho prático desenvolvido para a disciplina **Aplicações para a Internet*
 
 ## 📌 Sobre o Projeto
 
-O projeto é uma aplicação web de recomendação de livros baseada na arquitetura **MVC (Model-View-Controller)**, desenvolvida em **Java** com **Servlets**, **JSP (JavaServer Pages)** e **JDBC**.
+O projeto é uma aplicação web de recomendação de livros desenvolvida em **Java** com **Servlets**, **JSP (JavaServer Pages)** e **JDBC**. Ele é dividido em dois projetos: uma **API REST** (backend), que concentra as regras de negócio e o acesso ao banco, e uma **interface web em JSP** (frontend), que consome essa API.
 
 A plataforma permite:
 
@@ -30,6 +30,8 @@ A plataforma permite:
 - **Linguagem:** Java 17
 - **Gerenciador de dependências:** Apache Maven
 - **API Web:** Jakarta Servlet 6.0
+- **Formato de troca de dados:** JSON, com [Gson](https://github.com/google/gson)
+- **Autenticação da API:** JWT (JSON Web Token), com [java-jwt](https://github.com/auth0/java-jwt)
 - **Interface:** JSP, JSTL, CSS e [Tailwind CSS](https://tailwindcss.com/)
 - **Gerenciador de dependências do frontend:** npm
 - **Persistência:** JDBC
@@ -38,22 +40,75 @@ A plataforma permite:
 - **Containerização:** Docker e Docker Compose
 - **Administração do banco:** phpMyAdmin
 
-O Tailwind CSS é compilado pelo script `build` definido no `package.json` de cada projeto. O CSS deve ser gerado antes da criação do arquivo `.war` pelo Maven.
+O Tailwind CSS é usado apenas no frontend e é compilado pelo script `build` definido em `frontend/package.json`. O CSS deve ser gerado antes da criação do arquivo `.war` pelo Maven.
 
 ---
 
 ## 🧩 Arquitetura: frontend e backend
 
-O projeto está sendo migrado de um monólito para uma **API REST**. Para isso, o código foi dividido em dois projetos, que **neste momento ainda são cópias idênticas do monólito**:
-
-| Projeto | Pasta | Container | URL local | Papel futuro |
+| Projeto | Pasta | Container | URL local | Responsabilidade |
 |---|---|---|---|---|
-| Frontend | [`frontend/`](frontend/) | `mvc-java-frontend` | http://localhost:8080/mvc | Interface web (JSP), consumindo a API |
-| Backend | [`backend/`](backend/) | `mvc-java-backend` | http://localhost:8082/mvc | API REST com acesso ao banco |
+| Frontend | [`frontend/`](frontend/) | `mvc-java-frontend` | http://localhost:8080/mvc | Telas em JSP, sessão do usuário e chamadas à API |
+| Backend | [`backend/`](backend/) | `mvc-java-backend` | http://localhost:8082/mvc/api | API REST: recebe e devolve JSON, aplica as regras de negócio e acessa o MySQL |
 
-Cada projeto tem seu próprio `pom.xml`, `package.json` e `src/`, e gera seu próprio `deploy/mvc.war`. Cada um roda em um container Tomcat separado.
+```text
+Navegador ──HTML──▶ Frontend (JSP) ──JSON + JWT──▶ Backend (API REST) ──JDBC──▶ MySQL
+```
 
-Os containers estão na mesma rede Docker (`mvc-network`). De dentro do frontend, o backend é acessado pelo nome do serviço: `http://backend:8080/mvc`. Esse endereço já está disponível no frontend pela variável de ambiente `BACKEND_URL`.
+- **Frontend:** os *controllers* (servlets) leem os formulários e chamam os *services*. Os services não acessam o banco: eles fazem requisições HTTP à API por meio da classe `ApiClient`. O resultado é exibido nas páginas JSP.
+- **Backend:** os servlets recebem JSON, chamam os *services* (regras de negócio), que usam os *DAOs* (SQL), e devolvem JSON. O backend não tem telas.
+- Os containers estão na mesma rede Docker (`mvc-network`). O frontend acessa a API pelo endereço `http://backend:8080/mvc`, definido na variável de ambiente `BACKEND_URL`.
+
+### Autenticação com JWT
+
+1. O frontend envia login e senha para `POST /api/login`.
+2. A API confere os dados e devolve um **token JWT** assinado, junto com os dados do usuário (sem a senha).
+3. O frontend guarda o token na sessão e o envia em todas as requisições seguintes, no cabeçalho `Authorization: Bearer <token>`.
+4. No backend, o filtro `JwtFilter` valida o token antes de qualquer rota `/api/*`, exceto `/api/login` e `/api/cadastro`. O token informa o ID e o perfil do usuário, usados para as permissões.
+5. O token expira em 2 horas. Quando isso acontece, o frontend encerra a sessão e redireciona para o login.
+
+A chave de assinatura do token é definida pela variável de ambiente `JWT_SECRET` do serviço `backend` no `docker-compose.yml`.
+
+### Rotas da API
+
+Todas as rotas começam com `http://localhost:8082/mvc`. Os erros sempre são devolvidos no formato `{"erro": "mensagem"}`.
+
+| Método | Rota | Acesso | Descrição |
+|---|---|---|---|
+| POST | `/api/login` | Público | Autentica e devolve `{token, usuario}` |
+| POST | `/api/cadastro` | Público | Cria um usuário leitor e devolve `{token, usuario}` |
+| GET | `/api/livros` | Logado | Lista os livros |
+| GET | `/api/livros/{id}` | Logado | Busca um livro (com os IDs dos gêneros) |
+| POST | `/api/livros` | Admin | Cadastra um livro |
+| PUT | `/api/livros/{id}` | Admin | Altera um livro |
+| DELETE | `/api/livros/{id}` | Admin | Exclui um livro |
+| GET | `/api/generos` | Logado | Lista os gêneros |
+| GET | `/api/generos/{id}` | Logado | Busca um gênero |
+| POST | `/api/generos` | Admin | Cadastra um gênero |
+| PUT | `/api/generos/{id}` | Admin | Altera um gênero |
+| DELETE | `/api/generos/{id}` | Admin | Exclui um gênero |
+| GET | `/api/usuarios` | Admin | Lista os usuários |
+| GET | `/api/usuarios/{id}` | Próprio usuário ou admin | Busca um usuário |
+| POST | `/api/usuarios` | Admin | Cadastra um usuário (com qualquer perfil) |
+| PUT | `/api/usuarios/{id}` | Admin | Altera um usuário (senha vazia mantém a atual) |
+| DELETE | `/api/usuarios/{id}` | Admin | Exclui um usuário (não permite excluir a si mesmo) |
+| GET | `/api/usuarios/{id}/generos` | Próprio usuário ou admin | Gêneros favoritos do usuário |
+| POST | `/api/usuarios/{id}/generos/{generoId}` | Próprio usuário ou admin | Marca ou desmarca um gênero favorito |
+| GET | `/api/usuarios/{id}/recomendados` | Próprio usuário ou admin | Livros recomendados para o usuário |
+| GET | `/api/dashboard` | Admin | Totais e dados dos gráficos do painel |
+
+**Códigos de resposta:** `200` sucesso · `201` criado · `204` excluído · `400` dados inválidos · `401` sem token, token inválido ou login incorreto · `403` sem permissão · `404` não encontrado · `500` erro interno.
+
+Exemplo de uso (Git Bash):
+
+```bash
+# login: copie o "token" da resposta
+curl -X POST http://localhost:8082/mvc/api/login \
+     -H "Content-Type: application/json" -d '{"login":"admin","senha":"123456"}'
+
+# listar livros com o token
+curl http://localhost:8082/mvc/api/livros -H "Authorization: Bearer SEU_TOKEN"
+```
 
 ---
 
@@ -71,6 +126,8 @@ O banco de dados já está modelado e sua definição está disponível no arqui
 - `livro_generos`: relaciona livros aos seus respectivos gêneros.
 
 As tabelas `usuario_generos` e `livro_generos` representam relacionamentos muitos-para-muitos. O banco também possui restrições de unicidade para nomes de gêneros, ISBNs e logins de usuários, além de chaves estrangeiras para garantir a integridade dos relacionamentos.
+
+As recomendações são calculadas a partir dessas duas tabelas: um livro é recomendado a um usuário quando possui pelo menos um gênero marcado como favorito por ele. Por isso, todo livro precisa ter ao menos um gênero.
 
 > O arquivo `init.sql` é executado automaticamente pelo container do MySQL na primeira inicialização do volume do banco.
 
@@ -94,38 +151,40 @@ As tabelas `usuario_generos` e `livro_generos` representam relacionamentos muito
    cd trabalho-mvc-java
    ```
 
-2. Em **cada** projeto (`frontend/` e `backend/`), instale as dependências, compile o CSS do Tailwind e gere o `.war`:
+2. Gere o `.war` do backend (API):
+
+   ```bash
+   cd backend
+   mvn clean package
+   cd ..
+   ```
+
+3. Gere o `.war` do frontend, compilando antes o CSS do Tailwind:
 
    ```bash
    cd frontend
    npm install
    npm run build
    mvn clean package
-
-   cd ../backend
-   npm install
-   npm run build
-   mvn clean package
-
    cd ..
    ```
 
-   Os arquivos serão gerados em `frontend/deploy/mvc.war` e `backend/deploy/mvc.war`.
+   Os arquivos serão gerados em `backend/deploy/mvc.war` e `frontend/deploy/mvc.war`.
 
-3. Na raiz do repositório, suba os containers do MySQL, frontend, backend e phpMyAdmin:
+4. Na raiz do repositório, suba os containers do MySQL, backend, frontend e phpMyAdmin:
 
    ```bash
    docker compose up -d
    ```
 
-4. Acesse as aplicações no navegador:
+5. Acesse no navegador:
 
    ```text
-   Frontend: http://localhost:8080/mvc
-   Backend:  http://localhost:8082/mvc
+   Aplicação (frontend): http://localhost:8080/mvc
+   API (backend):        http://localhost:8082/mvc/api
    ```
 
-5. Para acessar o phpMyAdmin:
+6. Para acessar o phpMyAdmin:
 
    ```text
    http://localhost:8081
@@ -135,14 +194,10 @@ As tabelas `usuario_generos` e `livro_generos` representam relacionamentos muito
 
 ### Recompilação após alterações
 
-Sempre que houver alterações em um dos projetos, execute dentro da pasta dele (`frontend/` ou `backend/`):
+- **Backend:** dentro de `backend/`, execute `mvn clean package`.
+- **Frontend:** dentro de `frontend/`, execute `npm run build` e depois `mvn clean package`.
 
-```bash
-npm run build
-mvn clean package
-```
-
-Não é necessário reiniciar os containers após as alterações. O Tomcat detecta o novo `deploy/mvc.war` do projeto e faz o redeploy automaticamente.
+Não é necessário reiniciar os containers após as alterações. O Tomcat detecta o novo `deploy/mvc.war` do projeto e faz o redeploy automaticamente. A exceção é quando o `docker-compose.yml` muda (por exemplo, o `JWT_SECRET`): nesse caso, execute `docker compose up -d` para recriar o container.
 
 ### Encerrando os containers
 
@@ -164,51 +219,43 @@ docker compose down -v
 
 ```text
 .
-├── docker-compose.yml               # Serviços MySQL, frontend, backend e phpMyAdmin
-├── init.sql                         # Modelo, estrutura e dados iniciais do banco (compartilhado)
-├── frontend/                        # Projeto da interface web
-│   ├── pom.xml                      # Configuração do Maven
-│   ├── package.json                 # Dependências e scripts do Tailwind
-│   ├── deploy/                      # WAR gerado pelo Maven (montado no container do frontend)
-│   └── src/                         # Estrutura descrita abaixo
-└── backend/                         # Projeto da API REST
-    ├── pom.xml
-    ├── package.json
-    ├── deploy/                      # WAR gerado pelo Maven (montado no container do backend)
-    └── src/                         # Estrutura descrita abaixo
-```
-
-Estrutura do `src/` (hoje igual nos dois projetos):
-
-```text
-src
-└── main
-    ├── java
-    │   └── br
-    │       └── com
-    │           └── mvc
-    │               ├── config       # Configurações e conexão com o banco
-    │               ├── controller   # Servlets e controle das requisições
-    │               ├── dao          # Acesso e operações no banco de dados
-    │               ├── filter       # Filtros de autenticação e autorização
-    │               ├── model        # Entidades do domínio
-    │               └── service      # Regras de negócio
-    └── webapp
-        ├── WEB-INF
-        │   ├── jsp
-        │   │   ├── admin           # Telas administrativas
-        │   │   │   ├── generos
-        │   │   │   ├── livros
-        │   │   │   └── usuarios
-        │   │   ├── comum            # Telas para usuários comuns
-        │   │   ├── cadastro.jsp
-        │   │   ├── login.jsp
-        │   │   └── welcome.jsp
-        │   ├── tags                 # Tags reutilizáveis, incluindo o layout
-        │   └── web.xml              # Configuração da aplicação web
-        ├── css                      # Folhas de estilo, incluindo o CSS compilado do Tailwind
-        ├── images                   # Logos e imagens da aplicação
-        └── index.jsp                # Página inicial
+├── docker-compose.yml               # Serviços MySQL, backend, frontend e phpMyAdmin
+├── init.sql                         # Modelo, estrutura e dados iniciais do banco
+├── backend/                         # API REST
+│   ├── pom.xml                      # Dependências: Servlet, MySQL, Gson e java-jwt
+│   ├── deploy/                      # WAR gerado pelo Maven (montado no container do backend)
+│   └── src/main/java/br/com/mvc
+│       ├── config                   # Conexão com o banco (MysqlSingleton) e geração/validação do JWT
+│       ├── controller               # Servlets da API: recebem e devolvem JSON
+│       ├── dao                      # Acesso e operações no banco de dados (SQL)
+│       ├── filter                   # JwtFilter: exige um token válido nas rotas /api/*
+│       ├── model                    # Entidades do domínio
+│       └── service                  # Regras de negócio
+└── frontend/                        # Interface web
+    ├── pom.xml                      # Dependências: Servlet, JSTL e Gson
+    ├── package.json                 # Dependências e scripts do Tailwind
+    ├── deploy/                      # WAR gerado pelo Maven (montado no container do frontend)
+    └── src/main
+        ├── java/br/com/mvc
+        │   ├── config               # ApiClient (chamadas HTTP à API) e exceção de sessão expirada
+        │   ├── controller           # Servlets das telas: leem formulários e encaminham para os JSPs
+        │   ├── filter               # Login obrigatório, acesso de admin e envio do token à API
+        │   ├── model                # Objetos recebidos e enviados à API
+        │   └── service              # Chamam as rotas da API
+        └── webapp
+            ├── WEB-INF
+            │   ├── jsp
+            │   │   ├── admin        # Telas administrativas (dashboard, livros, gêneros, usuários)
+            │   │   ├── comum        # Telas para usuários comuns
+            │   │   ├── cadastro.jsp
+            │   │   ├── erro.jsp     # Página única de erros (404, 500, ...)
+            │   │   ├── login.jsp
+            │   │   └── welcome.jsp
+            │   ├── tags             # Tags reutilizáveis, incluindo o layout
+            │   └── web.xml          # Configuração da aplicação e das páginas de erro
+            ├── css                  # Folhas de estilo, incluindo o CSS compilado do Tailwind
+            ├── images               # Logos e imagens da aplicação
+            └── index.jsp            # Página inicial
 ```
 
 ---

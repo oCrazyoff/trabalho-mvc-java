@@ -29,8 +29,7 @@ public class CadastroServlet extends BaseServlet {
         this.forward(req, resp, VIEW);
     }
 
-    // 2. Função para processar o cadastro e efetuar login automático do novo
-    // usuário
+    // 2. Função para processar o cadastro e efetuar login automático do novo usuário
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         req.setCharacterEncoding("UTF-8");
@@ -40,15 +39,9 @@ public class CadastroServlet extends BaseServlet {
         usuario.setLogin(this.param(req, "login"));
         usuario.setSenha(this.param(req, "senha"));
 
-        // Perfil fixado no backend: 2 = Comum (Leitor)
-        usuario.setPerfilId(2L);
-
         try {
-            // Valida se login já existe, senha mínima de 6 dígitos, etc.
-            this.usuarioService.salvar(usuario);
-
-            // Faz o login do usuário recém-criado para receber o token
-            LoginResposta resposta = this.usuarioService.autenticar(usuario.getLogin(), usuario.getSenha());
+            // a API valida os dados, define o perfil de leitor e devolve o token
+            LoginResposta resposta = this.usuarioService.cadastrar(usuario);
 
             // Já inicia a sessão do usuário recém-cadastrado e manda pro início
             HttpSession session = req.getSession(true);
@@ -59,6 +52,7 @@ public class CadastroServlet extends BaseServlet {
         } catch (IllegalArgumentException e) {
             // Em caso de erro (ex: login repetido, senha curta), volta pra tela com a
             // mensagem
+            usuario.setSenha(null);
             req.setAttribute("erro", e.getMessage());
             req.setAttribute("usuario", usuario);
             this.forward(req, resp, VIEW);

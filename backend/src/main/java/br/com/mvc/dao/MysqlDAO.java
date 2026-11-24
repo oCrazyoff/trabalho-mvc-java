@@ -9,7 +9,8 @@ import java.sql.SQLException;
  * Classe base dos DAOs que usam MySQL.
  *
  * Guarda referencia ao {@link MysqlSingleton} (uma conexao reutilizada).
- * Os DAOs filhos usam executar() para SELECT e executarUpdate() para INSERT/UPDATE/DELETE.
+ * Os DAOs filhos usam executar() para SELECT, executarUpdate() para UPDATE/DELETE
+ * e executarInsert() quando precisam do ID gerado.
  */
 public class MysqlDAO {
 
@@ -25,5 +26,9 @@ public class MysqlDAO {
 
     protected int executarUpdate(String sql, Object... parametros) throws SQLException {
         return this.banco.executarUpdate(sql, parametros);
+    }
+
+    protected Long executarInsert(String sql, Object... parametros) throws SQLException {
+        return this.banco.executarInsert(sql, parametros);
     }
 }

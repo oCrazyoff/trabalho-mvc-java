@@ -16,7 +16,7 @@ services:
     networks:
       - mvc-network
 
-  # API REST (por enquanto, cópia idêntica do monolito)
+  # API REST: recebe e devolve JSON, protegida por JWT
   backend:
     image: tomcat:10.1-jdk21
     container_name: mvc-java-backend
@@ -31,7 +31,7 @@ services:
     networks:
       - mvc-network
 
-  # Interface web (por enquanto, cópia idêntica do monolito)
+  # Interface web (JSP): consome a API do backend
   frontend:
     image: tomcat:10.1-jdk21
     container_name: mvc-java-frontend
@@ -40,7 +40,7 @@ services:
     volumes:
       - ./frontend/deploy:/usr/local/tomcat/webapps
     environment:
-      # Endereço do backend dentro da rede Docker, para uso futuro
+      # Endereço da API dentro da rede Docker
       BACKEND_URL: http://backend:8080/mvc
     depends_on:
       - backend

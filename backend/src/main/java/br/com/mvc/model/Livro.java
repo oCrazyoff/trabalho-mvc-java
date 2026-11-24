@@ -1,5 +1,7 @@
 package br.com.mvc.model;
 
+import java.util.List;
+
 public class Livro {
     private Long id;
     private String titulo;
@@ -10,6 +12,7 @@ public class Livro {
     private Integer anoPublicacao;
     private Integer numPaginas;
     private String capaUrl;
+    private List<Long> generosIds;
 
     public Livro() {
     }
@@ -50,8 +53,8 @@ public class Livro {
         return isbn;
     }
 
-    public String setIsbn(String isbn) {
-        return isbn;
+    public void setIsbn(String isbn) {
+        this.isbn = isbn;
     }
 
     public String getEditora() {
@@ -84,6 +87,14 @@ public class Livro {
 
     public void setCapaUrl(String capaUrl) {
         this.capaUrl = capaUrl;
+    }
+
+    public List<Long> getGenerosIds() {
+        return generosIds;
+    }
+
+    public void setGenerosIds(List<Long> generosIds) {
+        this.generosIds = generosIds;
     }
 
 }

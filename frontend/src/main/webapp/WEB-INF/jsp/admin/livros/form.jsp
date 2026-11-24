@@ -6,6 +6,13 @@
 <t:layout titulo="Livro - Lumina">
     <div class="container mx-auto max-w-3xl p-4 sm:p-6 lg:p-8">
 
+        <%-- Mensagem de erro de validação da API --%>
+        <c:if test="${not empty erro}">
+            <div class="mb-6 rounded-xl bg-red-50 p-4 text-sm font-medium text-red-700 border border-red-200">
+                <c:out value="${erro}"/>
+            </div>
+        </c:if>
+
         <div class="mb-8">
             <a href="${pageContext.request.contextPath}/admin/livros"
             class="inline-flex items-center gap-2 text-sm font-medium text-gray-500 transition hover:text-principal">
@@ -89,7 +96,68 @@
                 placeholder="https://..."
                 class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-principal focus:bg-white focus:ring-2 focus:ring-principal/20"/>
             </div>
+
+            <div>
+                <label for="isbn" class="mb-2 block text-sm font-semibold text-gray-700">
+                    ISBN
+                </label>
+                <input type="text" id="isbn" name="isbn"
+                value="<c:out value='${livro.isbn}'/>"
+                maxlength="20"
+                placeholder="Ex.: 9788535914849"
+                class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-principal focus:bg-white focus:ring-2 focus:ring-principal/20"/>
+            </div>
+
+            <div>
+                <label for="numPaginas" class="mb-2 block text-sm font-semibold text-gray-700">
+                    Número de páginas
+                </label>
+                <input type="number" id="numPaginas" name="numPaginas"
+                value="<c:out value='${livro.numPaginas}'/>"
+                min="1" step="1"
+                placeholder="Ex.: 320"
+                class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-principal focus:bg-white focus:ring-2 focus:ring-principal/20"/>
+            </div>
         </div>
+
+        <div>
+            <label for="sinopse" class="mb-2 block text-sm font-semibold text-gray-700">
+                Sinopse
+            </label>
+            <textarea id="sinopse" name="sinopse" rows="4"
+            placeholder="Um breve resumo da história..."
+            class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-principal focus:bg-white focus:ring-2 focus:ring-principal/20"><c:out value="${livro.sinopse}"/></textarea>
+        </div>
+
+        <%-- Gêneros do livro: usados nas recomendações --%>
+        <fieldset>
+            <legend class="mb-2 block text-sm font-semibold text-gray-700">
+                Gêneros <span class="text-red-500">*</span>
+            </legend>
+            <p class="mb-3 text-xs text-gray-400">
+                O livro será recomendado para quem tiver algum destes gêneros como favorito.
+            </p>
+
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <c:forEach items="${generos}" var="g">
+                    <c:set var="marcado" value="${not empty livro.generosIds and livro.generosIds.contains(g.id)}" />
+                    <label class="flex cursor-pointer items-center gap-3 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700 transition hover:border-principal has-[:checked]:border-principal has-[:checked]:bg-principal/5">
+                        <input type="checkbox" name="generosIds" value="${g.id}"
+                        ${marcado ? 'checked' : ''}
+                        class="h-4 w-4 rounded border-gray-300 accent-principal"/>
+                        <c:out value="${g.nome}"/>
+                    </label>
+                </c:forEach>
+            </div>
+
+            <c:if test="${empty generos}">
+                <p class="text-sm text-gray-500">
+                    Nenhum gênero cadastrado.
+                    <a href="${pageContext.request.contextPath}/admin/generos?acao=novo" class="font-semibold text-principal hover:underline">Cadastre um gênero</a>
+                    antes de cadastrar livros.
+                </p>
+            </c:if>
+        </fieldset>
 
         <div class="flex flex-col-reverse gap-3 border-t border-gray-100 pt-6 sm:flex-row sm:justify-end">
             <a href="${pageContext.request.contextPath}/admin/livros"

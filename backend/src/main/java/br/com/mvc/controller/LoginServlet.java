@@ -1,6 +1,5 @@
 package br.com.mvc.controller;
 
-import br.com.mvc.config.JwtUtil;
 import br.com.mvc.model.Usuario;
 import br.com.mvc.service.UsuarioService;
 import jakarta.servlet.annotation.WebServlet;
@@ -8,8 +7,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 @WebServlet("/api/login")
 public class LoginServlet extends BaseServlet {
@@ -29,12 +26,6 @@ public class LoginServlet extends BaseServlet {
             return;
         }
 
-        String token = JwtUtil.gerarToken(usuario);
-        usuario.setSenha(null);
-
-        Map<String, Object> corpo = new LinkedHashMap<>();
-        corpo.put("token", token);
-        corpo.put("usuario", usuario);
-        this.json(resp, 200, corpo);
+        this.responderComToken(resp, 200, usuario);
     }
 }

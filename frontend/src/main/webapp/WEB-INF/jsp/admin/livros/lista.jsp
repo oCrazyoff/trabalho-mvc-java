@@ -6,6 +6,13 @@
 <t:layout titulo="Livros - Lumina">
     <div class="container mx-auto max-w-7xl p-4 sm:p-6 lg:p-8">
 
+        <%-- Mensagem de erro da API (ex.: ao excluir) --%>
+        <c:if test="${not empty erro}">
+            <div class="mb-6 rounded-xl bg-red-50 p-4 text-sm font-medium text-red-700 border border-red-200">
+                <c:out value="${erro}"/>
+            </div>
+        </c:if>
+
         <div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
                 <span class="text-sm font-semibold uppercase tracking-wider text-principal">
