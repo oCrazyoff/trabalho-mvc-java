@@ -18,6 +18,17 @@ public class ApiClient {
     private static final HttpClient HTTP = HttpClient.newHttpClient();
     private static final Gson GSON = new Gson();
 
+    // token da requisição atual (preenchido pelo TokenFilter)
+    private static final ThreadLocal<String> TOKEN = new ThreadLocal<>();
+
+    public static void definirToken(String token) {
+        TOKEN.set(token);
+    }
+
+    public static void limparToken() {
+        TOKEN.remove();
+    }
+
     public static <T> T get(String caminho, Type tipo) {
         return enviar("GET", caminho, null, tipo);
     }
@@ -39,21 +50,34 @@ public class ApiClient {
                 ? HttpRequest.BodyPublishers.noBody()
                 : HttpRequest.BodyPublishers.ofString(GSON.toJson(corpo), StandardCharsets.UTF_8);
 
-        HttpRequest req = HttpRequest.newBuilder(URI.create(BASE_URL + caminho))
+        String token = TOKEN.get();
+
+        HttpRequest.Builder builder = HttpRequest.newBuilder(URI.create(BASE_URL + caminho))
                 .header("Content-Type", "application/json; charset=UTF-8")
                 .header("Accept", "application/json")
-                .method(metodo, body)
-                .build();
+                .method(metodo, body);
+
+        if (token != null) {
+            builder.header("Authorization", "Bearer " + token);
+        }
 
         try {
-            HttpResponse<String> resp = HTTP.send(req, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+            HttpResponse<String> resp = HTTP.send(builder.build(),
+                    HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
             int status = resp.statusCode();
 
+            // 401 com token = sessão vencida; sem token = login inválido
+            if (status == 401) {
+                if (token != null) {
+                    throw new SessaoExpiradaException();
+                }
+                throw new IllegalArgumentException(lerErro(resp.body()));
+            }
             if (status == 404) {
-                return null; // igual ao DAO quando não encontrava
+                return null;
             }
             if (status >= 400 && status < 500) {
-                throw new IllegalArgumentException(lerErro(resp.body())); // validação/login
+                throw new IllegalArgumentException(lerErro(resp.body()));
             }
             if (status >= 500) {
                 throw new RuntimeException("Erro no servidor da API: " + lerErro(resp.body()));
@@ -71,6 +95,7 @@ public class ApiClient {
         }
     }
 
+    // lê a mensagem do JSON de erro: {"erro": "..."}
     private static String lerErro(String body) {
         try {
             return GSON.fromJson(body, JsonObject.class).get("erro").getAsString();

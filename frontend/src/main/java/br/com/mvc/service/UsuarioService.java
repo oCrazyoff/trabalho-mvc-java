@@ -1,6 +1,7 @@
 package br.com.mvc.service;
 
 import br.com.mvc.config.ApiClient;
+import br.com.mvc.model.LoginResposta;
 import br.com.mvc.model.Usuario;
 import com.google.gson.reflect.TypeToken;
 
@@ -12,13 +13,17 @@ public class UsuarioService {
     private static final Type LISTA_USUARIOS = new TypeToken<List<Usuario>>() {
     }.getType();
 
-    // envia login e senha; se forem inválidos a API devolve 401 e o ApiClient lança
-    // IllegalArgumentException
-    public Usuario autenticar(String login, String senha) {
+    // envia login e senha e recebe o token + dados do usuário
+    public LoginResposta autenticar(String login, String senha) {
         Usuario credenciais = new Usuario();
         credenciais.setLogin(login);
         credenciais.setSenha(senha);
-        return ApiClient.post("/api/login", credenciais, Usuario.class);
+
+        LoginResposta resposta = ApiClient.post("/api/login", credenciais, LoginResposta.class);
+        if (resposta == null || resposta.getToken() == null) {
+            throw new IllegalArgumentException("Não foi possível autenticar. Tente novamente.");
+        }
+        return resposta;
     }
 
     public List<Usuario> listar() {

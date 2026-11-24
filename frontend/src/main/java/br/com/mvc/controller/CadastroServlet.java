@@ -1,11 +1,13 @@
 package br.com.mvc.controller;
 
+import br.com.mvc.model.LoginResposta;
 import br.com.mvc.model.Usuario;
 import br.com.mvc.service.UsuarioService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
 
@@ -27,7 +29,8 @@ public class CadastroServlet extends BaseServlet {
         this.forward(req, resp, VIEW);
     }
 
-    // 2. Função para processar o cadastro e efetuar login automático do novo usuário
+    // 2. Função para processar o cadastro e efetuar login automático do novo
+    // usuário
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         req.setCharacterEncoding("UTF-8");
@@ -44,11 +47,13 @@ public class CadastroServlet extends BaseServlet {
             // Valida se login já existe, senha mínima de 6 dígitos, etc.
             this.usuarioService.salvar(usuario);
 
-            // Busca o usuário recém-criado no banco
-            Usuario usuarioLogado = this.usuarioService.autenticar(usuario.getLogin(), usuario.getSenha());
+            // Faz o login do usuário recém-criado para receber o token
+            LoginResposta resposta = this.usuarioService.autenticar(usuario.getLogin(), usuario.getSenha());
 
-            // Opção: Já inicia a sessão do usuário recém-cadastrado e manda pro início
-            req.getSession(true).setAttribute("usuarioLogado", usuarioLogado);
+            // Já inicia a sessão do usuário recém-cadastrado e manda pro início
+            HttpSession session = req.getSession(true);
+            session.setAttribute("usuarioLogado", resposta.getUsuario());
+            session.setAttribute("token", resposta.getToken());
             this.redirect(req, resp, "/inicio");
 
         } catch (IllegalArgumentException e) {

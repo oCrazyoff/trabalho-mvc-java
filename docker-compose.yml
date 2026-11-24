@@ -20,6 +20,8 @@ services:
   backend:
     image: tomcat:10.1-jdk21
     container_name: mvc-java-backend
+    environment:
+      JWT_SECRET: K9vR2mX8pL4qT7wN3zH6bC1jF5sD0aY8
     ports:
       - "8082:8080"
     volumes:

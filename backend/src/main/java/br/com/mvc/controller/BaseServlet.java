@@ -1,55 +1,100 @@
 package br.com.mvc.controller;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
+import java.util.Map;
 
-/**
- * Base dos controllers.
- * So helpers de rota/view: ler parametro, encaminhar JSP e redirecionar.
- * Regra de negocio fica no Service.
- */
 public abstract class BaseServlet extends HttpServlet {
 
-    // 1. Função para extrair a ação solicitada na requisição (padrão: "listar")
-    protected String acao(HttpServletRequest req) {
-        String acao = req.getParameter("acao");
-        if (acao == null || acao.isBlank()) {
-            return "listar";
+    protected static final Gson GSON = new Gson();
+
+    // configura a resposta como JSON e converte exceções em códigos HTTP
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+        req.setCharacterEncoding("UTF-8");
+        resp.setCharacterEncoding("UTF-8");
+        resp.setContentType("application/json");
+
+        try {
+            super.service(req, resp);
+        } catch (SecurityException e) {
+            this.erro(resp, 403, e.getMessage());
+        } catch (JsonSyntaxException e) {
+            this.erro(resp, 400, "JSON inválido.");
+        } catch (IllegalArgumentException e) {
+            this.erro(resp, 400, e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
+            this.erro(resp, 500, "Erro interno no servidor.");
         }
-        return acao;
     }
 
-    // 2. Função auxiliar para obter parâmetro em formato String
-    protected String param(HttpServletRequest req, String nome) {
-        return req.getParameter(nome);
+    // converte o JSON do corpo da requisição em objeto
+    protected <T> T lerJson(HttpServletRequest req, Class<T> tipo) throws IOException {
+        T objeto = GSON.fromJson(req.getReader(), tipo);
+        if (objeto == null) {
+            throw new IllegalArgumentException("Corpo da requisição vazio.");
+        }
+        return objeto;
     }
 
-    // 3. Função auxiliar para obter parâmetro e converter para Long
-    protected Long paramLong(HttpServletRequest req, String nome) {
-        String valor = req.getParameter(nome);
-        if (valor == null || valor.isBlank()) {
-            return null;
+    // escreve o objeto como JSON na resposta
+    protected void json(HttpServletResponse resp, int status, Object corpo) throws IOException {
+        resp.setStatus(status);
+        if (corpo != null) {
+            resp.getWriter().write(GSON.toJson(corpo));
         }
+    }
+
+    // resposta de erro padrão: {"erro": "mensagem"}
+    protected void erro(HttpServletResponse resp, int status, String mensagem) throws IOException {
+        this.json(resp, status, Map.of("erro", mensagem != null ? mensagem : "Erro."));
+    }
+
+    // "/api/livros/5" -> ["5"]
+    protected String[] caminho(HttpServletRequest req) {
+        String info = req.getPathInfo();
+        if (info == null || info.equals("/")) {
+            return new String[0];
+        }
+        return info.substring(1).split("/");
+    }
+
+    // converte um trecho da URL em ID
+    protected Long id(String valor) {
         try {
             return Long.valueOf(valor);
         } catch (NumberFormatException e) {
-            return null;
+            throw new IllegalArgumentException("ID inválido.");
         }
     }
 
-    // 4. Função para encaminhar a requisição para uma página JSP (forward)
-    protected void forward(HttpServletRequest req, HttpServletResponse resp, String jsp)
-            throws ServletException, IOException {
-        req.getRequestDispatcher(jsp).forward(req, resp);
+    // ID obrigatório na URL (PUT e DELETE)
+    protected Long idObrigatorio(HttpServletRequest req) {
+        String[] partes = this.caminho(req);
+        if (partes.length == 0) {
+            throw new IllegalArgumentException("Informe o ID na URL.");
+        }
+        return this.id(partes[0]);
     }
 
-    // 5. Função para redirecionar para outra rota (redirect)
-    protected void redirect(HttpServletRequest req, HttpServletResponse resp, String caminho)
-            throws IOException {
-        resp.sendRedirect(req.getContextPath() + caminho);
+    // ID do usuário que veio no token
+    protected Long usuarioLogadoId(HttpServletRequest req) {
+        return (Long) req.getAttribute("usuarioId");
+    }
+
+    // bloqueia quem não é administrador
+    protected void exigirAdmin(HttpServletRequest req) {
+        Long perfilId = (Long) req.getAttribute("perfilId");
+        if (perfilId == null || perfilId != 1L) {
+            throw new SecurityException("Acesso restrito a administradores.");
+        }
     }
 }

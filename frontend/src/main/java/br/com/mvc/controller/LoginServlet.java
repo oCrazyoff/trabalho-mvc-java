@@ -1,5 +1,6 @@
 package br.com.mvc.controller;
 
+import br.com.mvc.model.LoginResposta;
 import br.com.mvc.model.Usuario;
 import br.com.mvc.service.UsuarioService;
 import jakarta.servlet.ServletException;
@@ -53,11 +54,16 @@ public class LoginServlet extends BaseServlet {
         req.setCharacterEncoding("UTF-8");
 
         try {
-            Usuario usuario = this.usuarioService.autenticar(
+            LoginResposta resposta = this.usuarioService.autenticar(
                     this.param(req, "login"),
                     this.param(req, "senha"));
 
-            req.getSession(true).setAttribute("usuarioLogado", usuario);
+            Usuario usuario = resposta.getUsuario();
+
+            // guarda o usuário e o token na sessão
+            HttpSession session = req.getSession(true);
+            session.setAttribute("usuarioLogado", usuario);
+            session.setAttribute("token", resposta.getToken());
 
             // verificando se é admin ou não
             boolean isAdmin = (usuario.getPerfilId() != null && usuario.getPerfilId() == 1);
