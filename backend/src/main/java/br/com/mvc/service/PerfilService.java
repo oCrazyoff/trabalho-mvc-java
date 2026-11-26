@@ -58,6 +58,7 @@ public class PerfilService {
         if (this.perfilDAO.buscarPorId(perfil.getId()) == null) {
             throw new IllegalArgumentException("Perfil nao encontrado para alteracao.");
         }
+
         this.perfilDAO.alterar(perfil);
     }
 

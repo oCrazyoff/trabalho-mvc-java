@@ -46,25 +46,32 @@ public class ApiClient {
     }
 
     private static <T> T enviar(String metodo, String caminho, Object corpo, Type tipo) {
+        // monta a requisição e transforma em JSON
         HttpRequest.BodyPublisher body = (corpo == null)
                 ? HttpRequest.BodyPublishers.noBody()
                 : HttpRequest.BodyPublishers.ofString(GSON.toJson(corpo), StandardCharsets.UTF_8);
 
+        // pega o token
         String token = TOKEN.get();
 
+        // monta o cabeçalho
         HttpRequest.Builder builder = HttpRequest.newBuilder(URI.create(BASE_URL + caminho))
                 .header("Content-Type", "application/json; charset=UTF-8")
                 .header("Accept", "application/json")
                 .method(metodo, body);
 
+        // se tiver token adiciona no cabeçalho
         if (token != null) {
             builder.header("Authorization", "Bearer " + token);
         }
 
         try {
+            // envia a requisição e recebe a resposta
             HttpResponse<String> resp = HTTP.send(builder.build(),
                     HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
             int status = resp.statusCode();
+
+            // lida com todos codigos de erro
 
             // 401 com token = sessão vencida; sem token = login inválido
             if (status == 401) {
@@ -73,18 +80,24 @@ public class ApiClient {
                 }
                 throw new IllegalArgumentException(lerErro(resp.body()));
             }
+
             if (status == 404) {
                 return null;
             }
+
             if (status >= 400 && status < 500) {
                 throw new IllegalArgumentException(lerErro(resp.body()));
             }
+
             if (status >= 500) {
                 throw new RuntimeException("Erro no servidor da API: " + lerErro(resp.body()));
             }
+
             if (tipo == null || resp.body() == null || resp.body().isBlank()) {
                 return null;
             }
+
+            // transforma em objeto
             return GSON.fromJson(resp.body(), tipo);
 
         } catch (IOException e) {
